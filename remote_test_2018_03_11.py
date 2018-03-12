@@ -2709,7 +2709,4 @@ sts = run_schedule_py(ipmi, test_schedule)
 # Print Test Result
 sts = print_test_result()
 
-<<<<<<< HEAD
-## For Test  ffff
-=======
->>>>>>> 0f49b86ae5880f8b4ca187ce191764c8237fd10a
+
