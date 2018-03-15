@@ -16,6 +16,8 @@ from utility_function import *
 from nm_ipmi_raw_to_str import *
 from error_messages_define import *
 
+
+
 ## Global Test Item Switch form NM_000- NM_014, PECI_000-PECI_014 : Enable = 0 , Disable = 1
 NM_TEST_EN = [ENABLE, ENABLE, ENABLE, ENABLE, ENABLE, ENABLE, ENABLE, ENABLE, ENABLE, ENABLE, ENABLE, ENABLE, ENABLE, ENABLE, ENABLE, \
               # below are PECI_000 ~ PECI_014 (NM_TEST_STS[15~29])
@@ -69,23 +71,23 @@ def send_ipmb_aardvark(ipmi , netfn, raw):
 def ssh_send_cmd_switch( background_run,  PROGRAM_PATH , STRESS_CMD , LOG_SAVE ):
      if(DEBUG_OS_TYPE == os_linux):
           if(background_run == background_run_enable):
-               os.system( LINUX_BACKGROUND_RUN + 'ssh ' + os_user + '@' + os_ip_addr +' -t sudo ' + PROGRAM_PATH + ' ' + STRESS_CMD + ' &')
+                      os.system( LINUX_BACKGROUND_RUN + 'ssh ' + os_user + '@' + os_ip_addr +' -t sudo ' + PROGRAM_PATH + ' ' + STRESS_CMD + ' &')
           elif(background_run == background_run_disable):
                if(LOG_SAVE == 1):
-                    os.system('ssh ' + os_user + '@'+ os_ip_addr + ' -t sudo ' + PROGRAM_PATH + ' ' + STRESS_CMD + ' > ' + SSH_LOG_PATH_LINUX)
+                      os.system('ssh ' + os_user + '@'+ os_ip_addr + ' -t sudo ' + PROGRAM_PATH + ' ' + STRESS_CMD + ' > ' + SSH_LOG_PATH_LINUX)
                else:
-                    os.system('ssh ' + os_user + '@'+ os_ip_addr + ' -t sudo ' + PROGRAM_PATH + ' ' + STRESS_CMD)
+                      os.system('ssh ' + os_user + '@'+ os_ip_addr + ' -t sudo ' + PROGRAM_PATH + ' ' + STRESS_CMD)
           else:
                DEBUG('ssh_send_cmd_switch : ERROR!!  Incorrect type of background_run !!')
                return ERROR               
      elif(DEBUG_OS_TYPE == os_win):
           if(background_run == background_run_enable):
-               os.system( WIN_BACKGROUND_RUN + WIN_SSH_PATH + os_user + '@' + os_ip_addr +' -t sudo ' + PROGRAM_PATH + ' ' + STRESS_CMD + ' &')
+                      os.system( WIN_BACKGROUND_RUN + WIN_SSH_PATH + os_user + '@' + os_ip_addr +' -t sudo ' + PROGRAM_PATH + ' ' + STRESS_CMD + ' &')
           elif(background_run == background_run_disable):
                if(LOG_SAVE == 1):
-                    os.system(WIN_SSH_PATH + os_user + '@'+ os_ip_addr + ' -t sudo ' + PROGRAM_PATH + ' ' + STRESS_CMD + ' > ' + SSH_LOG_PATH_WIN)                 
+                      os.system(WIN_SSH_PATH + os_user + '@'+ os_ip_addr + ' -t sudo ' + PROGRAM_PATH + ' ' + STRESS_CMD + ' > ' + SSH_LOG_PATH_WIN)                 
                else:
-                    os.system(WIN_SSH_PATH + os_user + '@'+ os_ip_addr + ' -t sudo ' + PROGRAM_PATH + ' ' + STRESS_CMD)         
+                      os.system(WIN_SSH_PATH + os_user + '@'+ os_ip_addr + ' -t sudo ' + PROGRAM_PATH + ' ' + STRESS_CMD)         
           else:
                DEBUG('ssh_send_cmd_switch : ERROR!!  Incorrect type of background_run !!')
                return ERROR            
@@ -137,6 +139,24 @@ def check_os_available():
      OS_STS = 1
      return OS_STS
 
+##Function :  GET SSH FILE PATH
+def get_ssh_known_host_path():
+     ## DEBUG_OS_TYPE is hard code define in os_parameters_define.py 
+     if(DEBUG_OS_TYPE == os_linux):
+          SSH_LOG      = LINUX_SSH_KNOWN_HOST_PATH
+          SSH_ROOT_KNOWN_HOST = LINUX_SSH_ROOT_KNOWN_HOST_PATH
+     elif(DEBUG_OS_TYPE == os_win):
+          SSH_KNOWN_HOST      = WIN_SSH_KNOWN_HOST_PATH
+          SSH_ROOT_KNOWN_HOST = WIN_SSH_KNOWN_HOST_PATH
+     else:
+          DEBUG('NO This OS')
+          return ERROR, ERROR
+
+     DEBUG('SSH_KNOWN_HOST :'+ SSH_KNOWN_HOST)
+     DEBUG('SSH_ROOT_KNOWN_HOST :'+ SSH_ROOT_KNOWN_HOST)
+     
+     return SSH_KNOWN_HOST, SSH_ROOT_KNOWN_HOST
+
 
 ##Function :  GET NM TEST LIST
 def get_test_list_path():
@@ -186,6 +206,34 @@ def ptu_parameters_detect():
           return ERROR, ERROR, ERROR, ERROR
 
      return PTUGEN_P100_30SECS, PTUMON_3SECS, PTUMON_PATH, PTUGEN_PATH
+
+##Function :  Globla PTU parameters detect:
+def ptu_parameters_detect_initial():
+     # Detect Platform via Get DID
+     sps_version, platform, dcmi, nm, image  = get_device_id_py(ipmi)
+     if(platform == 9):
+          # Change OS PTU location for Greenlow
+          DEBUG('SPS FW is run in Greenlow E3 Platform, change PTU parameters')
+          return ERROR
+     elif(platform == 10):
+          DEBUG('SPS FW is run in Purley E5 Platform, change PTU parameters')
+          # Change OS PTU location for Purley
+          PTUGEN_P100_3SECS = '-p 100 -t 3'
+          PTUMON_3SECS = '-t 3'
+          PTUMON_PATH  = PURLEY_PTUMON_PATH
+          PTUGEN_PATH  = PURLEY_PTUGEN_PATH
+     elif(platform == 16):
+          DEBUG('SPS FW is run in Mehlow E3 Platform, change PTU parameters')
+          # Change OS PTU location for Mehlow
+          PTUGEN_P100_3SECS = '-P100 -D3'
+          PTUMON_3SECS = '-D3'
+          PTUMON_PATH  = MEHLOW_PTUMON_PATH
+          PTUGEN_PATH  = MEHLOW_PTUGEN_PATH
+     else:
+          DEBUG('NO This platform')
+          return ERROR, ERROR, ERROR, ERROR
+
+     return PTUGEN_P100_3SECS, PTUMON_3SECS, PTUMON_PATH, PTUGEN_PATH
 
 ## Function : Netfun : 0x0 , cmd = 0x01 IPMI Chassis Power status, Get current system power status  
 def get_chassis_status_py(ipmi ):
@@ -2693,20 +2741,57 @@ def print_test_result():
          else:
               print(NM_TEST_ITEM[count] + ' Test: Fail !!!')
               print('Please enable debug mode for more detail test information')
+
+
+def test_enviornment_initial_check():
+
+     # Remove old KNOWN_HOST in .ssh folder :
+     SSH_KNOWN_HOST, SSH_ROOT_KNOWN_HOST = get_ssh_known_host_path()
+     if os.path.isfile(SSH_KNOWN_HOST) :
+          os.remove(SSH_KNOWN_HOST)
+     if os.path.isfile(SSH_ROOT_KNOWN_HOST) :
+          os.remove(SSH_ROOT_KNOWN_HOST)
+     #
+#     print('Please input Yes/yes/y for below tests to initialization....')
+#     os.system(WIN_SSH_COPY_ID_PATH + ' -i ' + os_user + '@'+ os_ip_addr ) 
+     # Detect PTU PATH and parameters settings
+     PTUGEN_P100_3SECS, PTUMON_3SECS, PTUMON_PATH, PTUGEN_PATH = ptu_parameters_detect_initial()
+     # Run load on host system with PTU 100% loading for 3secs 
+
+#     try:
+     #print("Press enter to continue")
+     ssh_send_cmd_switch(background_run_disable,  PTUGEN_PATH , PTUGEN_P100_3SECS, LOG_SAVE_OFF )
+     return SUCCESSFUL
+ #    except SyntaxError:
+ #         print('no input data.....')
+ #         return ERROR
+ #         
+ #    return SUCCESSFUL
          
 ## Below is __Main__
-
 #sts = 0
 #while(sts == 0):
 #     sts = check_os_available()
 #     DEBUG('sts = %d' %sts)
-     
+
+#sts = 0
+#while(sts == 0):
+#sts = check_os_available()
+
 # Initial aardvark
 ipmi = aardvark_ipmi_init(target_me_addr, target_me_bridge_channel)
+# OS envrionment check:
+sts = test_enviornment_initial_check()
+if(sts ==SUCCESSFUL):
+     test_schedule = test_schedule()
+     sts = run_schedule_py(ipmi, test_schedule)
+     sts = print_test_result()
+else:
+     print('__Main__: ERROR !! Please check ssh and network environment settings....')
 # Config Test List file
-test_schedule = test_schedule()
-sts = run_schedule_py(ipmi, test_schedule)
+#test_schedule = test_schedule()
+#sts = run_schedule_py(ipmi, test_schedule)
 # Print Test Result
-sts = print_test_result()
+#sts = print_test_result()
 
 

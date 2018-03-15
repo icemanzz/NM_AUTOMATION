@@ -12,14 +12,19 @@ NM_TEST_FILE_WIN = 'nm_test_list.log'
 PTU_MON_LOG  = '/home/howard/ptumon_log'
 ## Below define empty path 
 SSH_CMD_PATH_EMPTY  = ' '
-##Below define PTU path for Purley
-PURLEY_PTUGEN_PATH  = '/home/howard/PTU/PURLEY/ptugen'
-PURLEY_PTUMON_PATH  = '/home/howard/PTU/PURLEY/ptumon'
-##Below for PTU path for Mehlow
-MEHLOW_PTUGEN_PATH  = '/home/howard/PTU/Mehlow/cflptugen'
-MEHLOW_PTUMON_PATH  = '/home/howard/PTU/Mehlow/cflptumon'
+##Below define remote test system PTU path for Purley
+PURLEY_PTUGEN_PATH  = '/root/PTU/PURLEY/ptugen'
+PURLEY_PTUMON_PATH  = '/root/PTU/PURLEY/ptumon'
+##Below define remote test system  PTU path for Mehlow
+MEHLOW_PTUGEN_PATH  = '/root/PTU/Mehlow/cflptugen'
+MEHLOW_PTUMON_PATH  = '/root/PTU/Mehlow/cflptumon'
 ##Window ssh path
 WIN_SSH_PATH = 'C:\\cygwin64\\bin\\ssh.exe '
+WIN_SSH_COPY_ID_PATH = 'C:\\cygwin64\\bin\\ssh-copy-id '
+##Window ssh known_hosts path C:\cygwin64\home\hchen109\.ssh
+WIN_SSH_KNOWN_HOST_PATH = 'C:\\cygwin64\\home\\hchen109\\.ssh\\known_hosts '
+LINUX_SSH_KNOWN_HOST_PATH = '/home/howard/.ssh/known_hosts'
+LINUX_SSH_ROOT_KNOWN_HOST_PATH = '/root/.ssh/known_hosts'
 ## Define Background run cmd
 WIN_BACKGROUND_RUN = 'start '
 LINUX_BACKGROUND_RUN = 'nohup '
@@ -92,7 +97,7 @@ NONE        = 'NONE'
 SUCCESSFUL   = '0'
 ERROR        = 'ERROR'
 # Debug OS Type define = 'win' or 'linux'
-DEBUG_OS_TYPE = 'win'
+DEBUG_OS_TYPE = 'linux'
 os_linux = 'linux'
 os_win   = 'win'
 #DEBUG_OS_TYPE = 'linux'
@@ -100,9 +105,9 @@ os_win   = 'win'
 background_run_disable = 0
 background_run_enable  = 1
 # OS User Name
-os_user      = 'howard'
+os_user      = 'root'
 # network IP settings
-os_ip_addr   = '10.5.250.32'
+os_ip_addr   = '10.5.250.16'
 # BMC network settings
 bmc_ip_addr  = '192.168.0.87'
 user         = 'root'
