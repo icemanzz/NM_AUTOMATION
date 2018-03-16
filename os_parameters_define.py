@@ -15,14 +15,18 @@ SSH_CMD_PATH_EMPTY  = ' '
 ##Below define remote test system PTU path for Purley
 PURLEY_PTUGEN_PATH  = '/root/PTU/PURLEY/ptugen'
 PURLEY_PTUMON_PATH  = '/root/PTU/PURLEY/ptumon'
+PURLEY_SSH_PTU_INIT_SCRIPT  = '/root/PTU/PURLEY/ptu_purley_init.sh'
 ##Below define remote test system  PTU path for Mehlow
 MEHLOW_PTUGEN_PATH  = '/root/PTU/Mehlow/cflptugen'
 MEHLOW_PTUMON_PATH  = '/root/PTU/Mehlow/cflptumon'
-##Window ssh path
+MEHLOW_SSH_PTU_INIT_SCRIPT  = '/root/PTU/Mehlow/ptu_mehlow_init.sh'
+##Window ssh tool path
 WIN_SSH_PATH = 'C:\\cygwin64\\bin\\ssh.exe '
 WIN_SSH_COPY_ID_PATH = 'C:\\cygwin64\\bin\\ssh-copy-id '
+WIN_SCP_PATH = 'C:\\cygwin64\\bin\\scp.exe '
 ##Window ssh known_hosts path C:\cygwin64\home\hchen109\.ssh
 WIN_SSH_KNOWN_HOST_PATH = 'C:\\cygwin64\\home\\hchen109\\.ssh\\known_hosts '
+## LINUX ssh known hosts path
 LINUX_SSH_KNOWN_HOST_PATH = '/home/howard/.ssh/known_hosts'
 LINUX_SSH_ROOT_KNOWN_HOST_PATH = '/root/.ssh/known_hosts'
 ## Define Background run cmd
@@ -97,7 +101,7 @@ NONE        = 'NONE'
 SUCCESSFUL   = '0'
 ERROR        = 'ERROR'
 # Debug OS Type define = 'win' or 'linux'
-DEBUG_OS_TYPE = 'linux'
+DEBUG_OS_TYPE = 'win'
 os_linux = 'linux'
 os_win   = 'win'
 #DEBUG_OS_TYPE = 'linux'
