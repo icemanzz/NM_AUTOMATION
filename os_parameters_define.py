@@ -12,6 +12,8 @@ NM_TEST_FILE_WIN = 'nm_test_list.log'
 PTU_MON_LOG  = '/home/howard/ptumon_log'
 ## Below define empty path 
 SSH_CMD_PATH_EMPTY  = ' '
+##  SSH IGNORE HOST KEY CHECK 
+SSH_IGNORE_HOST_KEY =' -o "StrictHostKeyChecking no" '
 ##Below define remote test system PTU path for Purley
 PURLEY_PTUGEN_PATH  = '/root/PTU/PURLEY/ptugen'
 PURLEY_PTUMON_PATH  = '/root/PTU/PURLEY/ptumon'
@@ -44,6 +46,8 @@ OS_RTC_LOG_WIN   = 'C:\\cygwin64\\home\\os_rtc.log'
 ## Define result file
 TEST_RESULT_WIN = 'nm_test_result'
 TEST_RESULT_LINUX = 'nm_test_result'
+#define previous OS IP data log path
+OS_IP_LOG = 'nm_os_ip'
 # OS RTC TIME CMD
 OSRTC  = 'timedatectl'
 # Defualt RTC TIME
@@ -110,6 +114,15 @@ background_run_disable = 0
 background_run_enable  = 1
 # OS User Name
 os_user      = 'root'
+# define target os ip mode :dhcp_ip_mode_en = 0  os ip =  os_ip_addr , dhcp_ip_mode_en = 1 os ip = dynamic dhcp ip
+dhcp_ip_mode_en = 0 
+# define max target ip range
+start_ip_range = 3
+end_ip_range = 254
+head_ip_add  = '192.168.0.'
+# define ping parameter for win and linux
+WIN_PING_PARAMETER = ' -n 1 -w 10 '
+LINUX_PING_PARAMETER = ' -c 1 -W 10 '
 # network IP settings
 os_ip_addr   = '10.5.250.16'
 # BMC network settings
