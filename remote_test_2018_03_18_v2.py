@@ -1162,6 +1162,11 @@ def run_schedule_py(ipmi, test_schedule):
      #system_config_detect_py(ipmi)
      count = 0
      for test_item in test_schedule:
+          # Check OS enviornment before testing
+          sts = test_enviornment_initial_check(ipmi)
+          if(sts == ERROR ):
+               print(run_schedule_py.__name__ + 'Error !! Can Not Re-Initial OS ' )
+               return ERROR
           # Restore to SPS FW to default for next test Item
           sts_restore = facture_default_py(ipmi, dfh_command_restore_default)
           if(sts_restore == SUCCESSFUL):
@@ -2882,6 +2887,7 @@ def PTU_003_WIN(ipmi):
          time_count = time_count + 1
          time.sleep(1)
      # Delay 20 secs
+     print(PTU_003_WIN.__name__ + ':Wait 20secs for BIOS initialize ....')
      time.sleep(20)
      # Check NM PTU Activate status
      manufacture_optin, bios_optin, bmc_activate, bios_activate, oem_empty_run, rom_launch, bmc_phase_only = mesdc_get_nm_ptu_launch_state_py(ipmi)
