@@ -206,6 +206,42 @@ def read_keyword_file(file_path, key_word, offset , resp_length, format_option):
      return ERROR
 
 ## Fucntion : Search a keyword from file and get data from key word offset.
+## resp_length : how many text you want to get from file.
+## format_option = 0 = str ;;; format_option = 1 = int
+def read_keyword_file_from_end(file_path, key_word, offset , resp_length, format_option):
+     f = open(file_path, 'r+b')
+     mf = mmap.mmap(f.fileno(), 0)
+     mf.seek(0) # reset file cursor
+     # Detect Key Word location
+     m = re.search(key_word, mf)
+     # print data location
+     DEBUG('read_keyword_file(): key word location as below range in file:')
+     DEBUG( m.start())
+     DEBUG( m.end())
+     # Serch data from keyword + offset location, storage data in str format
+     mf.seek((int(m.end()) + offset))
+     str = mf.readline()
+     if(format_option == 0):
+         DEBUG('read_keyword_file(): Return data is string aray')
+         return str[0:resp_length]
+     elif(format_option == 1):
+         # Convert str to int
+         int_resp = int(str[0:resp_length], 0)
+         DEBUG('read_keyword_file(): resp = %16d' %int_resp)
+         return int_resp
+     elif(format_option == 2):
+         # Convert str to hex
+         hex_resp = int(str[0:resp_length], 16)
+         DEBUG('read_keyword_file(): resp = %x' %hex_resp)
+         return hex_resp
+     else:
+         DEBUG('read_keyword_file(): format_option parameters cannot identify')
+         return ERROR
+
+     return ERROR
+
+
+## Fucntion : Search a keyword from file and get data from key word offset.
 def search_keyword_file(file_path, key_word):
      f = open(file_path, 'r+b')
      mf = mmap.mmap(f.fileno(), 0)

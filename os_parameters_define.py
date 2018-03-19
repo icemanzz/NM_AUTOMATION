@@ -24,6 +24,13 @@ MEHLOW_PTUMON_PATH  = '/root/PTU/Mehlow/cflptumon'
 MEHLOW_SSH_PTU_INIT_SCRIPT  = '/root/PTU/Mehlow/ptu_mehlow_init.sh'
 # Define spsinfo path in iso OS
 SPS_INFO_PATH = '/root/build_centos_iso/SPS_Tools_4.2.86.64_int/Sps_Info/Linux64/spsInfoLinux64'
+# Define spsinfo keyword registers 
+SPS_INFO_FWSTS1 = 'FW Status Register 1:'
+SPS_INFO_FWSTS2 = 'FW Status Register 2:'
+SPS_INFO_FWSTS4 = 'FW Status Register 4:'
+SPS_INFO_FWSTS6 = 'FW Status Register 6:'
+# Define offset of data from keywork in spsinfo tool
+SPS_INFO_KEYWORD_OFFSET = 1
 ##Window ssh tool path
 WIN_SSH_PATH = 'C:\\cygwin64\\bin\\ssh.exe '
 WIN_SSH_COPY_ID_PATH = 'C:\\cygwin64\\bin\\ssh-copy-id '
@@ -40,8 +47,10 @@ LINUX_BACKGROUND_RUN = 'nohup '
 LOG_SAVE_OFF = 0
 LOG_SAVE_EN  = 1
 ## Define SSH LOG FILE PATH
-SSH_LOG_PATH_LINUX = '/home/howard/nm_ssh_log'
-SSH_LOG_PATH_WIN = 'C:\\cygwin64\\home\\nm_ssh_log'
+#SSH_LOG_PATH_LINUX = '/home/howard/nm_ssh_log'
+#SSH_LOG_PATH_WIN = 'C:\\cygwin64\\home\\nm_ssh_log'
+SSH_LOG_PATH_LINUX = 'nm_ssh_log'
+SSH_LOG_PATH_WIN = 'nm_ssh_log'
 # Path of OS RTC LOG
 OS_RTC_LOG   = '/home/howard/os_rtc'
 OS_RTC_LOG_WIN   = 'C:\\cygwin64\\home\\os_rtc.log'

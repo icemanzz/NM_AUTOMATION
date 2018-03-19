@@ -2476,15 +2476,51 @@ def lspci_read(bus, device, function, offset):
                    
      return val
 
-## Function : BIOS_001 Test Process: Verify  BIOS HECI Interfaces initialization
-def BIOS_001_WIN(ipmi):
+
+## Function : Check SpsInfo data
+def spsinfo_log_read(FWSTS_REGISTER_NAME):
      #Run spsinfo
      sts = ssh_send_cmd_switch(background_run_disable,  SSH_CMD_PATH_EMPTY , SPS_INFO_PATH, LOG_SAVE_EN )
      if(sts == ERROR ):
-          print(BIOS_001_WIN.__name__ + 'Error !! Can Not Send SSH cmd via LAN ' )
+          print(spsinfo_log_read.__name__ + 'Error !! Can Not Send SSH cmd via LAN ' )
           return ERROR
+     #Check spsinfo response
+     NM_TEST_LIST, NM_TEST_FILE, SSH_LOG = get_test_list_path()
+     # Read Test Item from file
+     if os.path.isfile(SSH_LOG) :
+          DEBUG('file exist')
+          file = open(SSH_LOG, 'r')
+          with open(SSH_LOG, "r") as ins:
+              test_list = []
+              for line in ins:
+                  test_list.append(line.rstrip('\n'))
+          file.close()
+          DEBUG(test_list)
+          if(len(test_list) == 0):
+              DEBUG('SSH get file not exist') 
+              return ERROR 
+     else:
+         DEBUG('file not exist')        
+         return ERROR
+     #Check Register val 
+     resp_length = 10  # 0x0000F0245 10bytes
+     format_option = 0 # In string format respond
+     FWSTS = read_keyword_file_from_end(SSH_LOG, FWSTS_REGISTER_NAME , SPS_INFO_KEYWORD_OFFSET , 10 , format_option)        
+     if(FWSTS == ERROR ):
+         DEBUG('file key word check error!!!')
+         return ERROR
+                   
+     return FWSTS
+
+## Function : BIOS_001 Test Process: Verify  BIOS HECI Interfaces initialization
+def BIOS_001_WIN(ipmi):
+
      #Check SPSInfo response
-     
+     FWSTS1 = spsinfo_log_read(SPS_INFO_FWSTS1)
+     if(FWSTS1 != ERROR):
+          print(' BIOS_001_WIN : Error ! SpsInfo can not get correct respond data' )
+          return ERROR
+     print('SpsInfo FWSTS1 :' + FWSTS1)
      #Check PCI Configuation Register Bus0 Dev0x16 Fun0x1 offset A0
      val = lspci_read(0, 0x16, 1, 0xa0 )
      HIDM    = get_bits_data_py( val , 0 , 2)
