@@ -2710,6 +2710,13 @@ def ME_016_WIN(ipmi):
           print('ME_016_WIN : Error ! Read Power Data via MESDC Fail.  ')
           return ERROR
      print('mesdc_read_power_data_py : ME RSP DATA = 0x%x%x%x%x' %(ord(rsp[13]),ord(rsp[12]) ,ord(rsp[11]) ,ord(rsp[10])))
+     # Restore to SPS FW to default 
+     sts_restore = facture_default_py(ipmi, dfh_command_restore_default)
+     if(sts_restore == SUCCESSFUL):
+          print('ME_016_WIN : SPS FW back to facture default settings for next text item ready')
+     else:
+          print('ME_016_WIN : SPS FW restore Fail!!')
+          return ERROR
      
      return SUCCESSFUL
 
