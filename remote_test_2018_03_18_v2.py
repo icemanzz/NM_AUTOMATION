@@ -2881,6 +2881,8 @@ def PTU_003_WIN(ipmi):
              
          time_count = time_count + 1
          time.sleep(1)
+     # Delay 20 secs
+     time.sleep(20)
      # Check NM PTU Activate status
      manufacture_optin, bios_optin, bmc_activate, bios_activate, oem_empty_run, rom_launch, bmc_phase_only = mesdc_get_nm_ptu_launch_state_py(ipmi)
      if( (manufacture_optin != 1) or (bios_optin!= 1) or (bmc_activate != 1) or  (rom_launch != 1)):
