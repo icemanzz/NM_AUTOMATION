@@ -1605,99 +1605,23 @@ def NM_006_WIN(ipmi):
          # Get RTC data OK
          DEBUG(NM_006_WIN.__name__ + ':Get ME RTC OK')
          DEBUG(NM_006_WIN.__name__ + ':ME SEL RTC TIME Reading = %12d secs' %rtc_me)
+         if(rtc_me < temp_time ):
+              print('ERROR !!! ME RTC values not accuracy')
+              return ERROR
          temp_time = rtc_me
          # Add delay time 1 sec for next reading
          time.sleep(1)
-     # Calculate years
-     rtc_me_year = RTC_DEFAULT_YEAR + ( rtc_me / 365 / 24 / 60 / 60 )
-     # Calculate Mohths and Dates
-     # The leap years have 366 days, other years are 365 days
-     rtc_me_leap_year = rtc_me / 365 / 24 / 60 / 60 / 4
-     rtc_me_month =  rtc_me % ( 365 * 24 *60 * 60 ) /  (30 * 24 * 60 * 60) + 1
-     rtc_me_date  =  rtc_me % ( 365 * 24 *60 * 60 ) %  (30 * 24 * 60 * 60) / (24 * 60 * 60) + 1 - rtc_me_leap_year
-     if(rtc_me_date < 0):
-         rtc_me_month = rtc_me_month - 1
-         if(rtc_me_month < 0 ):
-              rtc_me_year = rtc_me_year - 1
-              rtc_me_month = 12
-         rtc_me_date = 30 - abs(rtc_me_date)
-     # January
-     if( (rtc_me_month - 1) == 0 ):
-         rtc_me_date  =  rtc_me_date
-     # Feburary
-     elif((rtc_me_month - 1) == 1):
-         # Subtract 1 because January is 31 days
-         rtc_me_date  =  rtc_me_date - 1
-     # March
-     elif((rtc_me_month - 1) == 2):
-         rtc_me_date  = rtc_me_date + 1
-     # April
-     elif((rtc_me_month - 1) == 3):
-         rtc_me_date  = rtc_me_date
-     # May
-     elif((rtc_me_month - 1) == 4):
-         rtc_me_date  = rtc_me_date
-     # June
-     elif((rtc_me_month - 1) == 5):
-         rtc_me_date  = rtc_me_date - 1
-     # July
-     elif((rtc_me_month - 1) == 6):
-         rtc_me_date  = rtc_me_date - 1
-     # August
-     elif((rtc_me_month - 1) == 7):
-         rtc_me_date  = rtc_me_date - 2
-     # September
-     elif((rtc_me_month - 1) == 8):
-         rtc_me_date  = rtc_me_date - 3
-     # October
-     elif((rtc_me_month - 1) == 9):
-         rtc_me_date  = rtc_me_date - 3
-     # November
-     elif((rtc_me_month - 1) == 10):
-         rtc_me_date  = rtc_me_date - 4
-     # December
-     elif((rtc_me_month - 1) == 11):
-         rtc_me_date  = rtc_me_date - 4
-     if(rtc_me_date < 0):
-         rtc_me_month = rtc_me_month - 1
-         if(rtc_me_month < 0 ):
-              rtc_me_year = rtc_me_year - 1
-              rtc_me_month = 12
-         rtc_me_date = 30 - abs(rtc_me_date)
-     rtc_me_hour  =  rtc_me % ( 365 * 24 *60 * 60 ) %  (30 * 24 * 60 * 60) % (24 * 60 * 60) / (60 * 60)
-     rtc_me_min  =  rtc_me % ( 365 * 24 *60 * 60 ) %  (30 * 24 * 60 * 60) % (24 * 60 * 60) % (60 * 60) / 60
-     rtc_me_sec  =  rtc_me % ( 365 * 24 *60 * 60 ) %  (30 * 24 * 60 * 60) % (24 * 60 * 60) % (60 * 60) % 60
-     print('Year of ME RTC TIME = %4d' % rtc_me_year)
-     print('Moth of ME RTC TIME = %4d' % rtc_me_month)
-     print('Date of ME RTC TIME = %4d' % rtc_me_date)
-     print ('Hour of ME RTC TIME = %4d' % rtc_me_hour)
-     print ('Min of ME RTC TIME = %4d' % rtc_me_min)
-     print ('Sec of ME RTC TIME = %4d' % rtc_me_sec)
-     # Get current host system RTC TIME
-     print(NM_006_WIN.__name__ + ':Get OS RTC TIME...')
-     ssh_send_cmd_switch(background_run_enable,  SSH_CMD_PATH_EMPTY , OSRTC, LOG_SAVE_EN )
-     # Compare OS RTC TIME with ME RTC TIME
-     print(NM_006_WIN.__name__ + ':Start compare ME RTC and OS RTC time...')
-     rtc_os = read_keyword_file(SSH_LOG, 'RTC' , 14 , 0 , 0)
-     print('OS RTC Year = ' + rtc_os[0:4])
-     print('OS RTC Month = ' + rtc_os[5:7])
-     print('OS RTC Data = ' + rtc_os[8:10])
-     print('OS RTC Hour = ' + rtc_os[11:13])
-     print('OS RTC Min = ' + rtc_os[14:16])
-     print('OS RTC Sec = ' + rtc_os[17:19])
-     # Check if hour and min values are accuracy
-     #if((abs(rtc_me_hour - int(rtc_os[11:13],0)) > 1) or (abs(rtc_me_min - int(rtc_os[14:16],0)) > 1 ) ):
-     #    print('ERROR !!! ME RTC hour or min values not accuracy')
-     #    return ERROR
-     # Check if ME RTC sec value accuracy. By default ME syncronize with Host RTC every 5 secs. So suppose sec difference value between ME RTC and Host msut small than 5 secs
-     if(abs(rtc_me_sec - int(rtc_os[17:19],0)) > 5 ):
-         print('ERROR !!! ME RTC hour or min values not accuracy')
-         return ERROR
 
      return SUCCESSFUL
 
 #Define NM_WS_004 : Boot time power limiting test process in Mehlow Windows
 def NM_WS_004_WIN(ipmi):
+     # Check OS enviornment before testing
+     sts = test_enviornment_initial_check(ipmi)
+     if(sts == ERROR ):
+         print(NM_WS_004_WIN.__name__ + 'Error !! Can Not Re-Initial OS ' )
+         return ERROR
+     print(NM_WS_004_WIN.__name__ + ':NM PTU_003 TEST Start ....')
      print(' NM_WS_004_WIN: NM_WS_004 Boot Time Power capping test start')
      # Prepare Package Thermal Status MSR0x1B1  : RdpkgConfig , index 0x14 
      raw_peci = peci_raw_rdpkgconfig(0, 20 , 0, 0 )
@@ -2120,6 +2044,12 @@ def SMART_001_WIN(ipmi):
 
 #Define PM_002 : Missing Power reading  test process in Mehlow Windows
 def PM_002_WIN(ipmi):
+     # Check OS enviornment before testing
+     sts = test_enviornment_initial_check(ipmi)
+     if(sts == ERROR ):
+         print(PM_002_WIN.__name__ + 'Error !! Can Not Re-Initial OS ' )
+         return ERROR
+     print(PM_002_WIN.__name__ + ':NM PTU_003 TEST Start ....')
      # Detect PTU PATH and parameters settings
      PTUGEN_P100_30SECS, PTUMON_3SECS, PTUMON_PATH, PTUGEN_PATH = ptu_parameters_detect(ipmi)
      # Run load on host system with PTU 100% loading for 30secs
@@ -2908,6 +2838,11 @@ def MCTP_004_WIN(ipmi, mctp_device_number):
 
 #Define PTU_003 test process in Mehlow Windows
 def PTU_003_WIN(ipmi):
+     # Check OS enviornment before testing
+     sts = test_enviornment_initial_check(ipmi)
+     if(sts == ERROR ):
+         print(PTU_003_WIN.__name__ + 'Error !! Can Not Re-Initial OS ' )
+         return ERROR
      print(PTU_003_WIN.__name__ + ':NM PTU_003 TEST Start ....')
      # Read Platform Power via 0xC8h cmd, Make sure platform power reading is OK
      power_average_stress = read_power_py(ipmi , global_power_mode, platform_domain,AC_power_side, 0 )     
