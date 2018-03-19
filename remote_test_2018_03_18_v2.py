@@ -397,7 +397,7 @@ def mesdc_get_mctp_statistic_py(ipmi):
 
 
 ## Function : Netfun: 0x30 , CMD :0x26H, MESDC Read Power Data
-def mesdc_read_power_data_py(ipmi):
+def mesdc_read_power_data_py(ipmi, addr):
      # Conver address value to int value
      addr = int(addr)
      # Coverter address int value to 2 bytes hex value 
@@ -2626,8 +2626,8 @@ def BIOS_002_WIN(ipmi):
           print(' BIOS_002_WIN : Error ! heci cmd can not get correct respond data' )
           return ERROR
      print('ME RESPOND DATA = ' + rsp)
-     major_interface_version = int( rsp[2:3], 0)  # rsp byte2
-     minor_interface_version = int( rsp[4:5], 0)  # rsp byte3
+     major_interface_version = int( rsp[3], 0)  # rsp byte2
+     minor_interface_version = int( rsp[5], 0)  # rsp byte3
      print('ME BIOS INTERFACE VERSION = %d.%d' %(major_interface_version,minor_interface_version ))
      if( (major_interface_version != 1) or (minor_interface_version != 1)):
           print(' BIOS_002_WIN : Error ! ME-BIOS HECI Interface version error ' )
