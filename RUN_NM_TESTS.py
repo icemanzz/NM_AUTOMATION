@@ -11,12 +11,14 @@ import mmap
 import array
 import getopt
 import sys
+## import other function define
+from file_path_handle import *
+from nm_network_handle import *
 from os_parameters_define import *
 from utility_function import *
 from nm_ipmi_raw_to_str import *
 from error_messages_define import *
-
-
+from config import *
 
 ## Global Test Item Switch form NM_000- NM_014, PECI_000-PECI_014 : Enable = 0 , Disable = 1
 NM_TEST_EN = [ENABLE, ENABLE, ENABLE, ENABLE, ENABLE, ENABLE, ENABLE, ENABLE, ENABLE, ENABLE, ENABLE, ENABLE, ENABLE, ENABLE, ENABLE, \
@@ -37,7 +39,11 @@ NM_TEST_EN = [ENABLE, ENABLE, ENABLE, ENABLE, ENABLE, ENABLE, ENABLE, ENABLE, EN
               # below is PTT_003~PTT_004 (NM_TEST_EN[60~61])
               ENABLE, ENABLE, \
               # below is BTG_003 (NM_TEST_EN[62])
-              ENABLE]
+              ENABLE, \
+              # below is BIOS_001~BIOS_004 (NM_TEST_EN[63~66])
+              ENABLE, ENABLE, ENABLE, ENABLE, \
+              # below is ME_001~ME_016 (NM_TEST_EN[67~82])
+              ENABLE, ENABLE, ENABLE, ENABLE, ENABLE, ENABLE, ENABLE, ENABLE, ENABLE, ENABLE, ENABLE, ENABLE, ENABLE, ENABLE, ENABLE, ENABLE ]
 ## Global Test Status
 NM_TEST_STS = [NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, \
                # below are PECI_000 ~ PECI_014 test status (NM_TEST_STS[15~29])
@@ -57,7 +63,11 @@ NM_TEST_STS = [NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE,
               # below is PTT_003~PTT_004 (NM_TEST_EN[60~61])
                NONE, NONE, \
               # below is BTG_003 (NM_TEST_EN[62])
-               NONE]
+               NONE, \
+              # below is BIOS_001~BIOS_004 (NM_TEST_EN[63~66])
+               NONE, NONE, NONE, NONE, \
+              # below is ME_001~ME_016 (NM_TEST_EN[67~82])
+               NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE ]
 
 ##Function :  Send IPMB cmd via aardvark and return response data 
 def send_ipmb_aardvark(ipmi , netfn, raw):
@@ -66,41 +76,18 @@ def send_ipmb_aardvark(ipmi , netfn, raw):
      rsp = ipmi.raw_command(lun, netfn, raw_bytes.tostring())
      print('Response Data: ' + ' '.join('%02x' % ord(d) for d in rsp))
      return rsp
-
-##Function : SSH CMD SWITCH FOR WIN AND LINUX OS
-def ssh_send_cmd_switch( background_run,  PROGRAM_PATH , STRESS_CMD , LOG_SAVE ):
-     if(DEBUG_OS_TYPE == os_linux):
-          if(background_run == background_run_enable):
-                      os.system( LINUX_BACKGROUND_RUN + 'ssh ' + os_user + '@' + os_ip_addr +' -t sudo ' + PROGRAM_PATH + ' ' + STRESS_CMD + ' &')
-          elif(background_run == background_run_disable):
-               if(LOG_SAVE == 1):
-                      os.system('ssh ' + os_user + '@'+ os_ip_addr + ' -t sudo ' + PROGRAM_PATH + ' ' + STRESS_CMD + ' > ' + SSH_LOG_PATH_LINUX)
-               else:
-                      os.system('ssh ' + os_user + '@'+ os_ip_addr + ' -t sudo ' + PROGRAM_PATH + ' ' + STRESS_CMD)
-          else:
-               DEBUG('ssh_send_cmd_switch : ERROR!!  Incorrect type of background_run !!')
-               return ERROR               
-     elif(DEBUG_OS_TYPE == os_win):
-          if(background_run == background_run_enable):
-                      os.system( WIN_BACKGROUND_RUN + WIN_SSH_PATH + os_user + '@' + os_ip_addr +' -t sudo ' + PROGRAM_PATH + ' ' + STRESS_CMD + ' &')
-          elif(background_run == background_run_disable):
-               if(LOG_SAVE == 1):
-                      os.system(WIN_SSH_PATH + os_user + '@'+ os_ip_addr + ' -t sudo ' + PROGRAM_PATH + ' ' + STRESS_CMD + ' > ' + SSH_LOG_PATH_WIN)                 
-               else:
-                      os.system(WIN_SSH_PATH + os_user + '@'+ os_ip_addr + ' -t sudo ' + PROGRAM_PATH + ' ' + STRESS_CMD)         
-          else:
-               DEBUG('ssh_send_cmd_switch : ERROR!!  Incorrect type of background_run !!')
-               return ERROR            
-     else:
-          return ERROR
-          
-     return SUCCESSFUL
-
+     
 ## Function : Detect if System boot into OS
   # Return : OS_STS = 0 = OS NOT Ready, OS_STS = 1 = OS READY
-def check_os_available():
+def check_os_available(ipmi):
      # Detect PTU PATH and parameters settings
-     PTUGEN_P100_30SECS, PTUMON_3SECS, PTUMON_PATH, PTUGEN_PATH = ptu_parameters_detect()
+     PTUGEN_P100_30SECS, PTUMON_3SECS, PTUMON_PATH, PTUGEN_PATH = ptu_parameters_detect(ipmi)
+     # Remove old KNOWN_HOST in .ssh folder :
+     SSH_KNOWN_HOST, SSH_ROOT_KNOWN_HOST = get_ssh_known_host_path()
+     if os.path.isfile(SSH_KNOWN_HOST) :
+          os.remove(SSH_KNOWN_HOST)
+     if os.path.isfile(SSH_ROOT_KNOWN_HOST) :
+          os.remove(SSH_ROOT_KNOWN_HOST)
      #TEST_CMD  = 'ls /home/howard/follow_me_project/get_position.py'
      TEST_CMD = 'ls ' + PTUGEN_PATH
      OS_STS = 0
@@ -139,48 +126,8 @@ def check_os_available():
      OS_STS = 1
      return OS_STS
 
-##Function :  GET SSH FILE PATH
-def get_ssh_known_host_path():
-     ## DEBUG_OS_TYPE is hard code define in os_parameters_define.py 
-     if(DEBUG_OS_TYPE == os_linux):
-          SSH_LOG      = LINUX_SSH_KNOWN_HOST_PATH
-          SSH_ROOT_KNOWN_HOST = LINUX_SSH_ROOT_KNOWN_HOST_PATH
-     elif(DEBUG_OS_TYPE == os_win):
-          SSH_KNOWN_HOST      = WIN_SSH_KNOWN_HOST_PATH
-          SSH_ROOT_KNOWN_HOST = WIN_SSH_KNOWN_HOST_PATH
-     else:
-          DEBUG('NO This OS')
-          return ERROR, ERROR
-
-     DEBUG('SSH_KNOWN_HOST :'+ SSH_KNOWN_HOST)
-     DEBUG('SSH_ROOT_KNOWN_HOST :'+ SSH_ROOT_KNOWN_HOST)
-     
-     return SSH_KNOWN_HOST, SSH_ROOT_KNOWN_HOST
-
-
-##Function :  GET NM TEST LIST
-def get_test_list_path():
-     ## DEBUG_OS_TYPE is hard code define in os_parameters_define.py 
-     if(DEBUG_OS_TYPE == os_linux):
-          NM_TEST_LIST = NM_TEST_LIST_LINUX
-          NM_TEST_FILE = NM_TEST_FILE_LINUX
-          SSH_LOG      = SSH_LOG_PATH_LINUX
-     elif(DEBUG_OS_TYPE == os_win):
-          NM_TEST_LIST = NM_TEST_LIST_WIN
-          NM_TEST_FILE = NM_TEST_FILE_WIN
-          SSH_LOG      = SSH_LOG_PATH_WIN
-     else:
-          DEBUG('NO This OS')
-          return ERROR, ERROR, ERROR
-
-     DEBUG('NM_TEST_LIST :'+ NM_TEST_LIST)
-     DEBUG('NM_TEST_FILE :'+ NM_TEST_FILE)
-     DEBUG('SSH_LOG :'+ SSH_LOG)
-     
-     return NM_TEST_LIST, NM_TEST_FILE, SSH_LOG
-
 ##Function :  Globla PTU parameters detect:
-def ptu_parameters_detect():
+def ptu_parameters_detect(ipmi):
      # Detect Platform via Get DID
      sps_version, platform, dcmi, nm, image  = get_device_id_py(ipmi)
      if(platform == 9):
@@ -207,8 +154,8 @@ def ptu_parameters_detect():
 
      return PTUGEN_P100_30SECS, PTUMON_3SECS, PTUMON_PATH, PTUGEN_PATH
 
-##Function :  Globla PTU parameters detect:
-def ptu_parameters_detect_initial():
+##Function :  Globla PTU initial script parameters detect:
+def ptu_initial_script_detect(ipmi):
      # Detect Platform via Get DID
      sps_version, platform, dcmi, nm, image  = get_device_id_py(ipmi)
      if(platform == 9):
@@ -218,22 +165,16 @@ def ptu_parameters_detect_initial():
      elif(platform == 10):
           DEBUG('SPS FW is run in Purley E5 Platform, change PTU parameters')
           # Change OS PTU location for Purley
-          PTUGEN_P100_3SECS = '-p 100 -t 3'
-          PTUMON_3SECS = '-t 3'
-          PTUMON_PATH  = PURLEY_PTUMON_PATH
-          PTUGEN_PATH  = PURLEY_PTUGEN_PATH
+          PTU_INITIAL_SCRIPT = PURLEY_SSH_PTU_INIT_SCRIPT
      elif(platform == 16):
           DEBUG('SPS FW is run in Mehlow E3 Platform, change PTU parameters')
           # Change OS PTU location for Mehlow
-          PTUGEN_P100_3SECS = '-P100 -D3'
-          PTUMON_3SECS = '-D3'
-          PTUMON_PATH  = MEHLOW_PTUMON_PATH
-          PTUGEN_PATH  = MEHLOW_PTUGEN_PATH
+          PTU_INITIAL_SCRIPT = MEHLOW_SSH_PTU_INIT_SCRIPT
      else:
           DEBUG('NO This platform')
-          return ERROR, ERROR, ERROR, ERROR
+          return ERROR
 
-     return PTUGEN_P100_3SECS, PTUMON_3SECS, PTUMON_PATH, PTUGEN_PATH
+     return PTU_INITIAL_SCRIPT
 
 ## Function : Netfun : 0x0 , cmd = 0x01 IPMI Chassis Power status, Get current system power status  
 def get_chassis_status_py(ipmi ):
@@ -454,6 +395,40 @@ def mesdc_get_mctp_statistic_py(ipmi):
      number_of_mctp_discoverd = ord(rsp[19])
 
      return number_of_mctp_discoverd
+
+
+## Function : Netfun: 0x30 , CMD :0x26H, MESDC Read Power Data
+def mesdc_read_power_data_py(ipmi, addr):
+     # Conver address value to int value
+     addr = int(addr)
+     # Coverter address int value to 2 bytes hex value 
+     hex_addr_arry = int_to_hex( addr, 2 )
+     netfn, mesdc_26h_read_power_data_raw = mesdc_26h_read_power_data_raw_to_str_py(hex_addr_arry)
+     # Send MESDC 0x26h Read Power Data with command option
+     rsp = send_ipmb_aardvark(ipmi , netfn , mesdc_26h_read_power_data_raw )
+     # Check if rsp data correct
+     sts = ipmi_resp_analyst_py( ord(rsp[0]), Controller_OEM )
+     if(sts != SUCCESSFUL ):
+         return ERROR
+     print('mesdc_read_power_data_py : ME RSP DATA = 0x%x%x%x%x' %(ord(rsp[13]),ord(rsp[12]) ,ord(rsp[11]) ,ord(rsp[10])))
+
+     return rsp
+
+## Function : Netfun: 0x30 , CMD :0x26H, MESDC Read SUSRAM HMRFPO NANCE  STATUS
+def mesdc_susram_hmrfpo_nonce_py(ipmi):
+     netfn, mesdc_26h_susram_hmrfpo_nonce_raw = mesdc_26h_susram_hmrfpo_nonce_raw_to_str_py()
+     # Send MESDC 0x26h MCTP statistic with command option
+     rsp = send_ipmb_aardvark(ipmi , netfn , mesdc_26h_susram_hmrfpo_nonce_raw )
+     # Check if rsp data correct
+     sts = ipmi_resp_analyst_py( ord(rsp[0]), Controller_OEM )
+     if(sts != SUCCESSFUL ):
+         return ERROR
+     print('mesdc_susram_hmrfpo_nonce_py : HMRFPO NONCE STATUS = %d' %ord(rsp[11]))
+     HMRFP_NONCE_STATUS = ord(rsp[11])
+
+     return HMRFP_NONCE_STATUS
+
+
 
 ## Function : Netfun: 0x30 , CMD :0x26H, MESDC Get NM PTU Launch state cmd
 def mesdc_get_nm_ptu_launch_state_py(ipmi):
@@ -1185,9 +1160,14 @@ def run_schedule_py(ipmi, test_schedule):
      file.write('//////////////// Test  Result ////////////// \n')
      file.close()          
      # Base on system configuation to disable Non-Support test items in test_schedule
-     system_config_detect_py(ipmi)
+     #system_config_detect_py(ipmi)
      count = 0
      for test_item in test_schedule:
+          # Check OS enviornment before testing
+          sts = test_enviornment_initial_check(ipmi)
+          if(sts == ERROR ):
+               print(run_schedule_py.__name__ + 'Error !! Can Not Re-Initial OS ' )
+               return ERROR
           # Restore to SPS FW to default for next test Item
           sts_restore = facture_default_py(ipmi, dfh_command_restore_default)
           if(sts_restore == SUCCESSFUL):
@@ -1301,6 +1281,34 @@ def run_schedule_py(ipmi, test_schedule):
                print('Start to run BTG_003 test ....')
                sts = BTG_003_WIN(ipmi)
                NM_TEST_STS[test_item] = sts
+          elif(test_item == 63):
+               print('Start to run BIOS_001 test ....')
+               sts = BIOS_001_WIN(ipmi)
+               NM_TEST_STS[test_item] = sts
+          elif(test_item == 64):
+               print('Start to run BIOS_002 test ....')
+               sts = BIOS_002_WIN(ipmi)
+               NM_TEST_STS[test_item] = sts
+          elif(test_item == 65):
+               print('Start to run BIOS_003 test ....')
+               sts = BIOS_003_WIN(ipmi)
+               NM_TEST_STS[test_item] = sts
+          elif(test_item == 66):
+               print('Start to run BIOS_004 test ....')
+               sts = BIOS_004_WIN(ipmi)
+               NM_TEST_STS[test_item] = sts
+          elif(test_item == 67):
+               print('Start to run ME_001 test ....')
+               sts = ME_001_WIN(ipmi)
+               NM_TEST_STS[test_item] = sts
+          elif(test_item == 69):
+               print('Start to run ME_003 test ....')
+               sts = ME_003_WIN(ipmi)
+               NM_TEST_STS[test_item] = sts
+          elif(test_item == 82):
+               print('Start to run ME_016 test ....')
+               sts = ME_016_WIN(ipmi)
+               NM_TEST_STS[test_item] = sts
           else:
                print('test item not in list .....')
                return ERROR
@@ -1413,7 +1421,7 @@ def aardvark_ipmi_init(target_addr, channel):
 ## Function : NM_003 Test Process: Verify CPU domain power reading is accuracy.
 def NM_003_WIN(ipmi):
      # Detect PTU PATH and parameters settings
-     PTUGEN_P100_30SECS, PTUMON_3SECS, PTUMON_PATH, PTUGEN_PATH = ptu_parameters_detect()
+     PTUGEN_P100_30SECS, PTUMON_3SECS, PTUMON_PATH, PTUGEN_PATH = ptu_parameters_detect(ipmi)
      # Run load on host system with PTU 100% loading for 30secs
      ssh_send_cmd_switch(background_run_enable,  PTUGEN_PATH , PTUGEN_P100_30SECS , LOG_SAVE_OFF)
      time.sleep(30)     
@@ -1445,7 +1453,7 @@ def NM_003_WIN(ipmi):
 ## Function : NM_004 Test Process: Verify Memory domain power reading is accuracy.
 def NM_004_WIN(ipmi):
      # Detect PTU PATH and parameters settings
-     PTUGEN_P100_30SECS, PTUMON_3SECS, PTUMON_PATH, PTUGEN_PATH = ptu_parameters_detect()
+     PTUGEN_P100_30SECS, PTUMON_3SECS, PTUMON_PATH, PTUGEN_PATH = ptu_parameters_detect(ipmi)
      # Run load on host system with PTU 100% loading for 30secs
      ssh_send_cmd_switch(background_run_enable,  PTUGEN_PATH , PTUGEN_P100_30SECS, LOG_SAVE_OFF )
      time.sleep(30)     
@@ -1478,7 +1486,7 @@ def NM_004_WIN(ipmi):
 def NM_009_WIN(ipmi):
 
      # Detect PTU PATH and parameters settings
-     PTUGEN_P100_30SECS, PTUMON_3SECS, PTUMON_PATH, PTUGEN_PATH = ptu_parameters_detect()
+     PTUGEN_P100_30SECS, PTUMON_3SECS, PTUMON_PATH, PTUGEN_PATH = ptu_parameters_detect(ipmi)
      # Run load on host system with PTU 100% loading for 80secs
      ssh_send_cmd_switch(background_run_enable,  PTUGEN_PATH , PTUGEN_P100_30SECS, LOG_SAVE_OFF )
      time.sleep(30)
@@ -1533,7 +1541,7 @@ def NM_009_WIN(ipmi):
 def NM_010_WIN(ipmi):
 
      # Detect PTU PATH and parameters settings
-     PTUGEN_P100_30SECS, PTUMON_3SECS, PTUMON_PATH, PTUGEN_PATH = ptu_parameters_detect()
+     PTUGEN_P100_30SECS, PTUMON_3SECS, PTUMON_PATH, PTUGEN_PATH = ptu_parameters_detect(ipmi)
      # Run load on host system with PTU 100% loading for 20secs
      ssh_send_cmd_switch(background_run_enable,  PTUGEN_PATH , PTUGEN_P100_30SECS, LOG_SAVE_OFF )
      time.sleep(5)
@@ -1603,99 +1611,23 @@ def NM_006_WIN(ipmi):
          # Get RTC data OK
          DEBUG(NM_006_WIN.__name__ + ':Get ME RTC OK')
          DEBUG(NM_006_WIN.__name__ + ':ME SEL RTC TIME Reading = %12d secs' %rtc_me)
+         if(rtc_me < temp_time ):
+              print('ERROR !!! ME RTC values not accuracy')
+              return ERROR
          temp_time = rtc_me
          # Add delay time 1 sec for next reading
          time.sleep(1)
-     # Calculate years
-     rtc_me_year = RTC_DEFAULT_YEAR + ( rtc_me / 365 / 24 / 60 / 60 )
-     # Calculate Mohths and Dates
-     # The leap years have 366 days, other years are 365 days
-     rtc_me_leap_year = rtc_me / 365 / 24 / 60 / 60 / 4
-     rtc_me_month =  rtc_me % ( 365 * 24 *60 * 60 ) /  (30 * 24 * 60 * 60) + 1
-     rtc_me_date  =  rtc_me % ( 365 * 24 *60 * 60 ) %  (30 * 24 * 60 * 60) / (24 * 60 * 60) + 1 - rtc_me_leap_year
-     if(rtc_me_date < 0):
-         rtc_me_month = rtc_me_month - 1
-         if(rtc_me_month < 0 ):
-              rtc_me_year = rtc_me_year - 1
-              rtc_me_month = 12
-         rtc_me_date = 30 - abs(rtc_me_date)
-     # January
-     if( (rtc_me_month - 1) == 0 ):
-         rtc_me_date  =  rtc_me_date
-     # Feburary
-     elif((rtc_me_month - 1) == 1):
-         # Subtract 1 because January is 31 days
-         rtc_me_date  =  rtc_me_date - 1
-     # March
-     elif((rtc_me_month - 1) == 2):
-         rtc_me_date  = rtc_me_date + 1
-     # April
-     elif((rtc_me_month - 1) == 3):
-         rtc_me_date  = rtc_me_date
-     # May
-     elif((rtc_me_month - 1) == 4):
-         rtc_me_date  = rtc_me_date
-     # June
-     elif((rtc_me_month - 1) == 5):
-         rtc_me_date  = rtc_me_date - 1
-     # July
-     elif((rtc_me_month - 1) == 6):
-         rtc_me_date  = rtc_me_date - 1
-     # August
-     elif((rtc_me_month - 1) == 7):
-         rtc_me_date  = rtc_me_date - 2
-     # September
-     elif((rtc_me_month - 1) == 8):
-         rtc_me_date  = rtc_me_date - 3
-     # October
-     elif((rtc_me_month - 1) == 9):
-         rtc_me_date  = rtc_me_date - 3
-     # November
-     elif((rtc_me_month - 1) == 10):
-         rtc_me_date  = rtc_me_date - 4
-     # December
-     elif((rtc_me_month - 1) == 11):
-         rtc_me_date  = rtc_me_date - 4
-     if(rtc_me_date < 0):
-         rtc_me_month = rtc_me_month - 1
-         if(rtc_me_month < 0 ):
-              rtc_me_year = rtc_me_year - 1
-              rtc_me_month = 12
-         rtc_me_date = 30 - abs(rtc_me_date)
-     rtc_me_hour  =  rtc_me % ( 365 * 24 *60 * 60 ) %  (30 * 24 * 60 * 60) % (24 * 60 * 60) / (60 * 60)
-     rtc_me_min  =  rtc_me % ( 365 * 24 *60 * 60 ) %  (30 * 24 * 60 * 60) % (24 * 60 * 60) % (60 * 60) / 60
-     rtc_me_sec  =  rtc_me % ( 365 * 24 *60 * 60 ) %  (30 * 24 * 60 * 60) % (24 * 60 * 60) % (60 * 60) % 60
-     print('Year of ME RTC TIME = %4d' % rtc_me_year)
-     print('Moth of ME RTC TIME = %4d' % rtc_me_month)
-     print('Date of ME RTC TIME = %4d' % rtc_me_date)
-     print ('Hour of ME RTC TIME = %4d' % rtc_me_hour)
-     print ('Min of ME RTC TIME = %4d' % rtc_me_min)
-     print ('Sec of ME RTC TIME = %4d' % rtc_me_sec)
-     # Get current host system RTC TIME
-     print(NM_006_WIN.__name__ + ':Get OS RTC TIME...')
-     ssh_send_cmd_switch(background_run_enable,  SSH_CMD_PATH_EMPTY , OSRTC, LOG_SAVE_EN )
-     # Compare OS RTC TIME with ME RTC TIME
-     print(NM_006_WIN.__name__ + ':Start compare ME RTC and OS RTC time...')
-     rtc_os = read_keyword_file(SSH_LOG, 'RTC' , 14 , 0 , 0)
-     print('OS RTC Year = ' + rtc_os[0:4])
-     print('OS RTC Month = ' + rtc_os[5:7])
-     print('OS RTC Data = ' + rtc_os[8:10])
-     print('OS RTC Hour = ' + rtc_os[11:13])
-     print('OS RTC Min = ' + rtc_os[14:16])
-     print('OS RTC Sec = ' + rtc_os[17:19])
-     # Check if hour and min values are accuracy
-     #if((abs(rtc_me_hour - int(rtc_os[11:13],0)) > 1) or (abs(rtc_me_min - int(rtc_os[14:16],0)) > 1 ) ):
-     #    print('ERROR !!! ME RTC hour or min values not accuracy')
-     #    return ERROR
-     # Check if ME RTC sec value accuracy. By default ME syncronize with Host RTC every 5 secs. So suppose sec difference value between ME RTC and Host msut small than 5 secs
-     if(abs(rtc_me_sec - int(rtc_os[17:19],0)) > 5 ):
-         print('ERROR !!! ME RTC hour or min values not accuracy')
-         return ERROR
 
      return SUCCESSFUL
 
 #Define NM_WS_004 : Boot time power limiting test process in Mehlow Windows
 def NM_WS_004_WIN(ipmi):
+     # Check OS enviornment before testing
+     sts = test_enviornment_initial_check(ipmi)
+     if(sts == ERROR ):
+         print(NM_WS_004_WIN.__name__ + 'Error !! Can Not Re-Initial OS ' )
+         return ERROR
+     print(NM_WS_004_WIN.__name__ + ':NM PTU_003 TEST Start ....')
      print(' NM_WS_004_WIN: NM_WS_004 Boot Time Power capping test start')
      # Prepare Package Thermal Status MSR0x1B1  : RdpkgConfig , index 0x14 
      raw_peci = peci_raw_rdpkgconfig(0, 20 , 0, 0 )
@@ -1760,6 +1692,8 @@ def NM_WS_004_WIN(ipmi):
          time_count = time_count + 1
          time.sleep(1)
      print(NM_WS_004_WIN.__name__ + ':System already reboot and before EOP state, start to check Boot Time power capping function...')
+     # Delay 5 secs
+     time.sleep(5)
      # Check if Limiting Policy ID =  3 via 0xF2 cmd
      limiting_policy_id = get_limiting_policy_id(ipmi , f2h_platform_domain )
      print(NM_WS_004_WIN.__name__  + ': Current Limiting Policy ID = %d' %limiting_policy_id)
@@ -1782,10 +1716,24 @@ def NM_WS_004_WIN(ipmi):
      if( (prochot_sts == 0) and (prochot_sts_log==0)):
          print('NM_WS_004_WIN Fail! No PROCHOT event happen after event triggered ')
          return ERROR
-         
-     #Waiting for 50 secs to make sure system already boot into OS again.
-     print('Waiting for 50 secs to make sure system already boot into OS again... ')   
-     time.sleep(50)
+     print('Waiting for system  boot into OS again... ')  
+     #Check if OS is available       
+     OS_STS = 0
+     timeout = 0
+     while(OS_STS == 0 and timeout != OS_BOOT_FAIL_TIMEOUT):
+         OS_STS = check_os_available(ipmi)
+         DEBUG('OS Not Ready , OS_STS = %d' %OS_STS)
+         time.sleep(1)
+         timeout = timeout + 1             
+     if(timeout == OS_BOOT_FAIL_TIMEOUT ):
+         print(DC_CYCLE.__name__ + 'Error !! Can Not turn on system and boot into OS normally ' )
+         return ERROR
+     #Re-Initial OS PTU
+     sts = test_enviornment_initial_check(ipmi)
+     if(sts == ERROR ):
+         print(DC_CYCLE.__name__ + 'Error !! Can Not Re-Initial OS ' )
+         return ERROR
+
      return SUCCESSFUL
 
 ## Function : PECI_004 Test Process: Verify PECI proxy function.
@@ -1827,7 +1775,7 @@ def PECI_004_WIN(ipmi):
 def NM_007_WIN(ipmi):
 
      # Detect PTU PATH and parameters settings
-     PTUGEN_P100_30SECS, PTUMON_3SECS, PTUMON_PATH, PTUGEN_PATH = ptu_parameters_detect()
+     PTUGEN_P100_30SECS, PTUMON_3SECS, PTUMON_PATH, PTUGEN_PATH = ptu_parameters_detect(ipmi)
      # Run load on host system with PTU 100% loading for 30secs
      ssh_send_cmd_switch(background_run_enable,  PTUGEN_PATH , PTUGEN_P100_30SECS, LOG_SAVE_OFF )
      time.sleep(30)
@@ -1906,7 +1854,7 @@ def NM_007_WIN(ipmi):
 # Note:   3. Platform Power Source from PSU or HSC with 100mesc polling reate in SDR (  BMC is not support this function )
 def NM_014_WIN(ipmi):
      # Detect PTU PATH and parameters settings
-     PTUGEN_P100_30SECS, PTUMON_3SECS, PTUMON_PATH, PTUGEN_PATH = ptu_parameters_detect()
+     PTUGEN_P100_30SECS, PTUMON_3SECS, PTUMON_PATH, PTUGEN_PATH = ptu_parameters_detect(ipmi)
      # Run load on host system with PTU 100% loading for 80secs
      ssh_send_cmd_switch(background_run_enable,  PTUGEN_PATH , PTUGEN_P100_30SECS, LOG_SAVE_OFF )
      time.sleep(30)
@@ -1982,7 +1930,7 @@ def SMART_PSU_RECOVERY(ipmi, default_ot_warm_low_byte, default_ot_warm_high_byte
 ## Function : SMART_001 Test Process: Verify SMART/CLST  function.
 def SMART_001_WIN(ipmi):
      # Detect PTU PATH and parameters settings
-     PTUGEN_P100_30SECS, PTUMON_3SECS, PTUMON_PATH, PTUGEN_PATH = ptu_parameters_detect()
+     PTUGEN_P100_30SECS, PTUMON_3SECS, PTUMON_PATH, PTUGEN_PATH = ptu_parameters_detect(ipmi)
      # Prepare Package Thermal Status MSR0x1B1  : RdpkgConfig , index 0x14 
      raw_peci = peci_raw_rdpkgconfig(0, 20 , 0, 0 )
      # Send Package Thermal Status via ME RAW PECI proxy: Write length = 5 byte , Read_Length = 5 bytes
@@ -2045,7 +1993,9 @@ def SMART_001_WIN(ipmi):
      if(rsp == ERROR):
          print('ERROR!!! send pmbus error ! respond data error')
          SMART_PSU_RECOVERY(ipmi,default_ot_warm_low_byte, default_ot_warm_high_byte, bus, target_addr )
-         return ERROR     
+         return ERROR
+     # Delay 15 secs , make sure event triggered
+     time.sleep(15)
      # Send Package Thermal Status again via ME RAW PECI proxy. Check event happen
      resp = send_raw_peci_py(ipmi, peci_40h_client_addr_cpu0, peci_40h_interface_fall_back, 5, 5, raw_peci )
      if(resp == ERROR):
@@ -2104,8 +2054,14 @@ def SMART_001_WIN(ipmi):
 
 #Define PM_002 : Missing Power reading  test process in Mehlow Windows
 def PM_002_WIN(ipmi):
+     # Check OS enviornment before testing
+     sts = test_enviornment_initial_check(ipmi)
+     if(sts == ERROR ):
+         print(PM_002_WIN.__name__ + 'Error !! Can Not Re-Initial OS ' )
+         return ERROR
+     print(PM_002_WIN.__name__ + ':NM PTU_003 TEST Start ....')
      # Detect PTU PATH and parameters settings
-     PTUGEN_P100_30SECS, PTUMON_3SECS, PTUMON_PATH, PTUGEN_PATH = ptu_parameters_detect()
+     PTUGEN_P100_30SECS, PTUMON_3SECS, PTUMON_PATH, PTUGEN_PATH = ptu_parameters_detect(ipmi)
      # Run load on host system with PTU 100% loading for 30secs
      ssh_send_cmd_switch(background_run_enable,  PTUGEN_PATH , PTUGEN_P100_30SECS, LOG_SAVE_OFF )
      #Waiting 20 secs for PTU stress ready
@@ -2215,9 +2171,8 @@ def PM_002_WIN(ipmi):
 
 #Define PM_003 test: Set Total Power Budget control process in Mehlow Windows
 def PM_003_WIN(ipmi):
-
      # Detect PTU PATH and parameters settings
-     PTUGEN_P100_30SECS, PTUMON_3SECS, PTUMON_PATH, PTUGEN_PATH = ptu_parameters_detect()
+     PTUGEN_P100_30SECS, PTUMON_3SECS, PTUMON_PATH, PTUGEN_PATH = ptu_parameters_detect(ipmi)
      # Run load on host system with PTU 100% loading for 80secs
      ssh_send_cmd_switch(background_run_enable,  PTUGEN_PATH , PTUGEN_P100_30SECS, LOG_SAVE_OFF )
      time.sleep(30)
@@ -2298,7 +2253,7 @@ def PM_004_WIN(ipmi):
 def PM_005_WIN(ipmi):
 
      # Detect PTU PATH and parameters settings
-     PTUGEN_P100_30SECS, PTUMON_3SECS, PTUMON_PATH, PTUGEN_PATH = ptu_parameters_detect()
+     PTUGEN_P100_30SECS, PTUMON_3SECS, PTUMON_PATH, PTUGEN_PATH = ptu_parameters_detect(ipmi)
      # Run load on host system with PTU 100% loading for 80secs
      ssh_send_cmd_switch(background_run_enable,  PTUGEN_PATH , PTUGEN_P100_30SECS, LOG_SAVE_OFF )
      time.sleep(30)
@@ -2353,7 +2308,7 @@ def PM_005_WIN(ipmi):
 def PM_006_WIN(ipmi):
 
      # Detect PTU PATH and parameters settings
-     PTUGEN_P100_30SECS, PTUMON_3SECS, PTUMON_PATH, PTUGEN_PATH = ptu_parameters_detect()
+     PTUGEN_P100_30SECS, PTUMON_3SECS, PTUMON_PATH, PTUGEN_PATH = ptu_parameters_detect(ipmi)
      # Run load on host system with PTU 100% loading for 80secs
      ssh_send_cmd_switch(background_run_enable,  PTUGEN_PATH , PTUGEN_P100_30SECS, LOG_SAVE_OFF )
      time.sleep(30)
@@ -2464,6 +2419,247 @@ def PTT_004_WIN(ipmi):
 
      return ERROR
 
+## Function : Read PCI Configuration Register via Linux LSPCI
+def lspci_read(bus, device, function, offset):
+     # Just change 0xXX to XX in hex format 
+     device = format(device, 'x')
+     # Config lspci cmd string
+     TEST_CMD = 'lspci -xxx -s ' + str(bus) + ':' + str(device) + '.' + str(function)
+     #Send lspci
+     sts = ssh_send_cmd_switch(background_run_disable,  SSH_CMD_PATH_EMPTY , TEST_CMD, LOG_SAVE_EN )
+     if(sts == ERROR ):
+          print(test_enviornment_initial_check.__name__ + 'Error !! Can Not Send SSH cmd via LAN ' )
+          return ERROR
+     #Check lspci response
+     NM_TEST_LIST, NM_TEST_FILE, SSH_LOG = get_test_list_path()
+     # Read Test Item from file
+     if os.path.isfile(SSH_LOG) :
+          DEBUG('file exist')
+          file = open(SSH_LOG, 'r')
+          with open(SSH_LOG, "r") as ins:
+              test_list = []
+              for line in ins:
+                  test_list.append(line.rstrip('\n'))
+          file.close()
+          DEBUG(test_list)
+          if(len(test_list) == 0):
+              DEBUG('SSH get file not exist') 
+              return ERROR 
+     else:
+         DEBUG('file not exist')        
+         return ERROR
+     #Check Register val 
+     cal =  (offset / 0x10)* 0x10 
+     cal = format(cal, 'x')
+     keyword = str(cal) + ':'
+     off_set = (offset % 0x10 )*3 + 4
+     resp_length = 2  # 2bytes respond
+     format_option = 2 # int format respond
+     val = read_keyword_file(SSH_LOG, keyword , off_set , resp_length, format_option)        
+     if(val == ERROR ):
+         DEBUG('file key word check error!!!')
+         return ERROR
+                   
+     return val
+
+
+## Function : Check SpsInfo data
+def spsinfo_log_read(FWSTS_REGISTER_NAME):
+     #Run spsinfo
+     sts = ssh_send_cmd_switch(background_run_disable,  SSH_CMD_PATH_EMPTY , SPS_INFO_PATH, LOG_SAVE_EN )
+     if(sts == ERROR ):
+          print(spsinfo_log_read.__name__ + 'Error !! Can Not Send SSH cmd via LAN ' )
+          return ERROR
+     #Check spsinfo response
+     NM_TEST_LIST, NM_TEST_FILE, SSH_LOG = get_test_list_path()
+     # Read Test Item from file
+     if os.path.isfile(SSH_LOG) :
+          DEBUG('file exist')
+          file = open(SSH_LOG, 'r')
+          with open(SSH_LOG, "r") as ins:
+              test_list = []
+              for line in ins:
+                  test_list.append(line.rstrip('\n'))
+          file.close()
+          DEBUG(test_list)
+          if(len(test_list) == 0):
+              DEBUG('SSH get file not exist') 
+              return ERROR 
+     else:
+         DEBUG('file not exist')        
+         return ERROR
+     #Check Register val 
+     resp_length = 10  # 0x0000F0245 10bytes
+     format_option = 0 # In string format respond
+     FWSTS = read_keyword_file_from_end(SSH_LOG, FWSTS_REGISTER_NAME , SPS_INFO_KEYWORD_OFFSET , 10 , format_option)
+     DEBUG(FWSTS_REGISTER_NAME + ' = ' + FWSTS )
+     if(FWSTS == ERROR ):
+         DEBUG('file key word check error!!!')
+         return ERROR
+                   
+     return FWSTS
+
+## Function : Send HECI cmd via Linux HECICMDTOOL
+def heci_cmd_tool_send(MEADDR, HECI_CMD , RSP_LENGTH):
+     # Config lspci cmd string
+     TEST_CMD = ' -MEADDR ' + MEADDR +  ' -PAYLOAD ' + HECI_CMD
+     #Run spsinfo
+     sts = ssh_send_cmd_switch(background_run_disable,  HECI_TOOL_PATH , TEST_CMD , LOG_SAVE_EN )
+     if(sts == ERROR ):
+          print(spsinfo_log_read.__name__ + 'Error !! Can Not Send SSH cmd via LAN ' )
+          return ERROR
+     #Check HECI tool response
+     NM_TEST_LIST, NM_TEST_FILE, SSH_LOG = get_test_list_path()
+     # Read Test Item from file
+     if os.path.isfile(SSH_LOG) :
+          DEBUG('file exist')
+          file = open(SSH_LOG, 'r')
+          with open(SSH_LOG, "r") as ins:
+              test_list = []
+              for line in ins:
+                  test_list.append(line.rstrip('\n'))
+          file.close()
+          DEBUG(test_list)
+          if(len(test_list) == 0):
+              DEBUG('SSH get file not exist') 
+              return ERROR 
+     else:
+         DEBUG('file not exist')        
+         return ERROR
+     #Check Register val 
+     resp_length = RSP_LENGTH*2  
+     format_option = 0 # In string format respond
+     keyword = 'RESPONSE:'
+     rsp = read_keyword_file_from_end(SSH_LOG, keyword , HECI_RESPOND_KEYWORD_OFFSET , resp_length , format_option)
+     DEBUG( 'ME RESPONSE = ' + rsp )
+     if(rsp == ERROR ):
+         DEBUG('file key word check error!!!')
+         return ERROR
+                   
+     return rsp
+
+## Function : BIOS_001 Test Process: Verify  BIOS HECI Interfaces initialization
+def BIOS_001_WIN(ipmi):
+
+     #Check SPSInfo response
+     FWSTS1 = spsinfo_log_read(SPS_INFO_FWSTS1)
+     if(FWSTS1 == ERROR):
+          print(' BIOS_001_WIN : Error ! SpsInfo can not get correct respond data' )
+          return ERROR
+     print('SpsInfo FWSTS1 :' + FWSTS1)
+     #Check PCI Configuation Register Bus0 Dev0x16 Fun0x1 offset A0
+     val = lspci_read(0, 0x16, 1, 0xa0 )
+     HIDM    = get_bits_data_py( val , 0 , 2)
+     print(' HECI Interrupt Delivery Mode (HIDM) = %d ' %val )
+     if(HIDM != 1):
+          print(' Error ! HECI2 Interrupt Delivery Mode (HIDM) = %d , Correct Settings is 0x01 SCI mode ' %val )
+          print('BIOS_001_WIN : Register settings Error!  BIOS HECI Interfaces initialization Fail!')
+          return ERROR
+     
+     return SUCCESSFUL
+
+## Function : BIOS_002 Test Process: Test BIOS Get Interface Version message
+def BIOS_002_WIN(ipmi):
+     # Send SPS Get ME BIOS INTERFACE HECI CMD and expect to get 11 bytes respond data 
+     rsp = heci_cmd_tool_send(HECI_MEADDR, HECI_GET_ME_BIOS_INTERFACE_CMD, 11)
+     if(rsp == ERROR):
+          print(' BIOS_002_WIN : Error ! heci cmd can not get correct respond data' )
+          return ERROR
+     print('ME RESPOND DATA = ' + rsp)
+     major_interface_version = int( rsp[3], 0)  # rsp byte2
+     minor_interface_version = int( rsp[5], 0)  # rsp byte3
+     print('ME BIOS INTERFACE VERSION = %d.%d' %(major_interface_version,minor_interface_version ))
+     if( (major_interface_version != 1) or (minor_interface_version != 1)):
+          print(' BIOS_002_WIN : Error ! ME-BIOS HECI Interface version error ' )
+          return ERROR
+     
+     return SUCCESSFUL
+
+
+## Function : BIOS_003 Test Process: Verify  BIOS HECI HMRFPO LOCK STATUS
+def BIOS_003_WIN(ipmi):
+     # Send HMRFPO GET STATUS
+     hmrfpo_sts = mesdc_susram_hmrfpo_nonce_py(ipmi)
+     if(hmrfpo_sts == ERROR):
+          print(' BIOS_003_WIN : Error ! susram get nonce status can not get correct respond data' )
+          return ERROR     
+     if(hmrfpo_sts != 1):
+          print(' BIOS_003_WIN : Error ! ME no received BIOS HMRFPO_LOCK cmd' )
+          return ERROR
+          
+     return SUCCESSFUL
+
+
+## Function : BIOS_004 Test Process:  Verify  BIOS HECI Interfaces initialization
+def BIOS_004_WIN(ipmi):
+     #Check if OS is available       
+     OS_STS = 0
+     timeout = 0
+     while(OS_STS == 0 and timeout != OS_BOOT_FAIL_TIMEOUT):
+         OS_STS = check_os_available(ipmi)
+         DEBUG('OS Not Ready , OS_STS = %d' %OS_STS)
+         time.sleep(1)
+         timeout = timeout + 1             
+     if(timeout == OS_BOOT_FAIL_TIMEOUT ):
+         print(BIOS_004_WIN.__name__ + 'Error !! Can Not turn on system and boot into OS normally ' )
+         return ERROR
+     # Check if EOP statue become 1 in OS side  
+     rsp, current_status, operation_state , eop= mesdc_get_version_py(ipmi)
+     if(eop == 0):
+         print(BIOS_004_WIN.__name__ + 'Error !! Not Received EOP cmd from BIOS ' )
+         return ERROR
+     
+     return SUCCESSFUL
+
+## Function : ME_001 Test Process:  checks for supported PSUs and revision
+def ME_001_WIN(ipmi):
+     # Check PSU configuration via D8h cmd
+     
+     # Send PMbus Proxy cmd to PSU
+     pmbus_version = get_pmbus_version_py(ipmi , bus , target_addr )
+
+     # Verify PMbus version
+     
+     return SUCCESSFUL
+     
+## Function : ME_003 Test Process:  Platform stability after Reset To Defaults
+def ME_003_WIN(ipmi):
+     # Restore to SPS FW to default 
+     sts_restore = facture_default_py(ipmi, dfh_command_restore_default)
+     if(sts_restore == SUCCESSFUL):
+          print('ME_003_WIN : SPS FW back to facture default settings for next text item ready')
+     else:
+          print('ME_003_WIN : SPS FW restore Fail!!')
+          return ERROR
+     
+     return SUCCESSFUL
+
+
+## Function : ME_016 Test Process:  MESDC over IPMB commands functional in Recovery Mode
+def ME_016_WIN(ipmi):
+     # Send 0xDF cmd  to SPS FW to put ME into Recovery mode 
+     sts_restore = facture_default_py(ipmi, dfh_command_recovery)
+     if(sts_restore == SUCCESSFUL):
+          print('ME_016_WIN : SPS FW boot into recovery mode for test now ...')
+     else:
+          print('ME_016_WIN : Error ! SPS FW can not boot into recovery mode.  ')
+          return ERROR
+     # Send MESDC Read Power Data cmd : 0xF280
+     rsp = mesdc_read_power_data_py(ipmi, 0xF280)
+     if(rsp == ERROR):
+          print('ME_016_WIN : Error ! Read Power Data via MESDC Fail.  ')
+          return ERROR
+     print('mesdc_read_power_data_py : ME RSP DATA = 0x%x%x%x%x' %(ord(rsp[13]),ord(rsp[12]) ,ord(rsp[11]) ,ord(rsp[10])))
+     # Restore to SPS FW to default 
+     sts_restore = facture_default_py(ipmi, dfh_command_restore_default)
+     if(sts_restore == SUCCESSFUL):
+          print('ME_016_WIN : SPS FW back to facture default settings for next text item ready')
+     else:
+          print('ME_016_WIN : SPS FW restore Fail!!')
+          return ERROR
+     
+     return SUCCESSFUL
+
 #Define Chassis_power_on cmd  for Mehlow
 def DC_CYCLE(ipmi):
      # Change Aardvark target to BMC for power status check
@@ -2502,22 +2698,19 @@ def DC_CYCLE(ipmi):
          target_routing = [(0x2c,6)]
          ipmi.target.set_routing(target_routing)
          while(OS_STS == 0 and timeout != OS_BOOT_FAIL_TIMEOUT):
-             OS_STS = check_os_available()
+             OS_STS = check_os_available(ipmi)
              DEBUG('OS Not Ready , OS_STS = %d' %OS_STS)
              time.sleep(1)
-             timeout = timeout + 1
+             timeout = timeout + 1             
+         if(timeout == OS_BOOT_FAIL_TIMEOUT ):
+             print(DC_CYCLE.__name__ + 'Error !! Can Not turn on system and boot into OS normally ' )
+             return ERROR
+         #Re-Initial OS PTU
+         sts = test_enviornment_initial_check(ipmi)
+         if(sts == ERROR ):
+             print(DC_CYCLE.__name__ + 'Error !! Can Not Re-Initial OS ' )
+             return ERROR
              
-         # Check if system in power on mode
-         # Change Aardvark target to BMC for power status check
-         ipmi.target = pyipmi.Target(target_bmc_addr)
-         target_routing = [(0x20,0)]
-         ipmi.target.set_routing(target_routing)
-         ipmi, power_status = get_chassis_status_py(ipmi)
-         if(power_status != 1 ):
-             print(DC_CYCLE.__name__ + 'Error !! Can Not turn on system normally ' )
-             print(DC_CYCLE.__name__ + 'power status = %d ' %power_status )
-             return ERROR 
-
      return ipmi, SUCCESSFUL
 
 #Define Chassis_power reset cmd  for Mehlow
@@ -2526,13 +2719,18 @@ def RESET_CYCLE(ipmi):
      timeout = 0
      OS_STS =0
      while(OS_STS == 0 and timeout != OS_BOOT_FAIL_TIMEOUT):
-         OS_STS = check_os_available()
+         OS_STS = check_os_available(ipmi)
          DEBUG('OS Not Ready , OS_STS = %d' %OS_STS)
          time.sleep(1)
          timeout = timeout + 1         
      if(timeout == OS_BOOT_FAIL_TIMEOUT):
          print('RESET_CYCLE_LOOP_WIN: Error ! System can not reboot to OS...! Fail')
-         return ERROR         
+         return ERROR
+     #Re-Initial OS PTU
+     sts = test_enviornment_initial_check(ipmi)
+     if(sts == ERROR ):
+         print(DC_CYCLE.__name__ + 'Error !! Can Not Re-Initial OS ' )
+         return ERROR
      # Reset system power 
      if(OS_STS == 1):
          # Reset OS via ACPI process
@@ -2584,7 +2782,7 @@ def DC_CYCLE_LOOP_WIN(ipmi , loop):
 def RESET_CYCLE_LOOP_WIN(ipmi , loop):
      count = 0
      OS_STS = 0
-     OS_STS = check_os_available()
+     OS_STS = check_os_available(ipmi)
      if(OS_STS == 0):
          print('Please boot system into OS to start testing....')
          return ERROR     
@@ -2650,6 +2848,11 @@ def MCTP_004_WIN(ipmi, mctp_device_number):
 
 #Define PTU_003 test process in Mehlow Windows
 def PTU_003_WIN(ipmi):
+     # Check OS enviornment before testing
+     sts = test_enviornment_initial_check(ipmi)
+     if(sts == ERROR ):
+         print(PTU_003_WIN.__name__ + 'Error !! Can Not Re-Initial OS ' )
+         return ERROR
      print(PTU_003_WIN.__name__ + ':NM PTU_003 TEST Start ....')
      # Read Platform Power via 0xC8h cmd, Make sure platform power reading is OK
      power_average_stress = read_power_py(ipmi , global_power_mode, platform_domain,AC_power_side, 0 )     
@@ -2669,8 +2872,24 @@ def PTU_003_WIN(ipmi):
      # Reset OS and DC power via ACPI process
      ssh_send_cmd_switch(background_run_enable,  SSH_CMD_PATH_EMPTY , centos_reset, LOG_SAVE_OFF )     
      # Waiting System Reboot.
-     print(PTU_003_WIN.__name__ + ':Wait 30 secs for system reboot Test')
-     time.sleep(30)
+     print(PTU_003_WIN.__name__ + ':Wait for system reboot Test')
+     # Check if system reboot and before BIOS EOP
+     eop = 1
+     time_count = 0
+     while(eop == 1 and time_count != OS_BOOT_FAIL_TIMEOUT):
+         rsp, current_status, operation_state , eop= mesdc_get_version_py(ipmi)
+         if(rsp == ERROR):
+             print(PTU_003_WIN.__name__ + ':NM PTU TEST FAIL !!!')
+             return ERROR
+         if(time_count > 30): # Make sure program will not go to dead loop due to system error status
+             print(PTU_003_WIN.__name__ + ':NM PTU TEST FAIL !!!')
+             return ERROR
+             
+         time_count = time_count + 1
+         time.sleep(1)
+     # Delay 20 secs
+     print(PTU_003_WIN.__name__ + ':Wait 20secs for BIOS initialize ....')
+     time.sleep(20)
      # Check NM PTU Activate status
      manufacture_optin, bios_optin, bmc_activate, bios_activate, oem_empty_run, rom_launch, bmc_phase_only = mesdc_get_nm_ptu_launch_state_py(ipmi)
      if( (manufacture_optin != 1) or (bios_optin!= 1) or (bmc_activate != 1) or  (rom_launch != 1)):
@@ -2679,8 +2898,7 @@ def PTU_003_WIN(ipmi):
          print(PTU_003_WIN.__name__ + ':manufacture_optin = %d , bios_optin = %d , bmc_activate = %d, bios_activate =%d , rom_launch = %d , bmc_phase_only = %d' %(manufacture_optin, bios_optin, bmc_activate , bios_activate, rom_launch , bmc_phase_only ))     
          return ERROR  
      # Waiting for NM PTU Test finish 
-     print(PTU_003_WIN.__name__ + ':Wait 120 secs for NM PTU Calibration testing....')
-     time.sleep(120)
+     print(PTU_003_WIN.__name__ + ':Wait  for NM PTU Calibration testing....')
      # Check if ME receive EOP
      eop = 0
      time_count = 0
@@ -2706,28 +2924,27 @@ def PTU_003_WIN(ipmi):
          print(PTU_003_WIN.__name__ + ':NM PTU_003 Test fail because power draw range not be changed automatically !!!') 
          return ERROR
 
-     #Waiting for 50 secs to make sure system already boot into OS again.
-     print('Waiting for 50 secs to make sure system already boot into OS again... ')   
-     time.sleep(50)     
+     #Waiting for < 180 secs to make sure system already boot into OS again.
+     print('Waiting for system  boot into OS again... ')   
+     OS_STS = 0
+     timeout = 0
+     #Check if OS is available
+     # Change Aardvark target to ME 
+     while(OS_STS == 0 and timeout != OS_BOOT_FAIL_TIMEOUT):
+         OS_STS = check_os_available(ipmi)
+         DEBUG('OS Not Ready , OS_STS = %d' %OS_STS)
+         time.sleep(1)
+         timeout = timeout + 1             
+     if(timeout == OS_BOOT_FAIL_TIMEOUT ):
+         print(DC_CYCLE.__name__ + 'Error !! Can Not turn on system and boot into OS normally ' )
+         return ERROR
+     #Re-Initial OS PTU
+     sts = test_enviornment_initial_check(ipmi)
+     if(sts == ERROR ):
+         print(DC_CYCLE.__name__ + 'Error !! Can Not Re-Initial OS ' )
+         return ERROR
+             
      return SUCCESSFUL
-
-def easy_loop():
-     ipmi = aardvark_ipmi_init(target_me_addr, target_me_bridge_channel)
-     val = 1
-     while(val == 1):
-         ipmi.target = pyipmi.Target(target_bmc_addr)
-         target_routing = [(0x20,0)]
-         ipmi.target.set_routing(target_routing)
-         ipmi, power_status = get_chassis_status_py(ipmi)
-         print( 'power status = %d ' %power_status )
-         time.sleep(5)
-         ipmi.target = pyipmi.Target(target_me_addr)
-         target_routing = [(0x2c,6)]
-         ipmi.target.set_routing(target_routing)
-         rsp, current_status, operation_state = mesdc_get_version_py(ipmi)
-         time.sleep(5)
-     print('ERROR')
-     return ERROR
 
 def print_test_result():
      size = len(NM_TEST_STS)
@@ -2743,55 +2960,49 @@ def print_test_result():
               print('Please enable debug mode for more detail test information')
 
 
-def test_enviornment_initial_check():
-
+def test_enviornment_initial_check(ipmi):
      # Remove old KNOWN_HOST in .ssh folder :
      SSH_KNOWN_HOST, SSH_ROOT_KNOWN_HOST = get_ssh_known_host_path()
      if os.path.isfile(SSH_KNOWN_HOST) :
           os.remove(SSH_KNOWN_HOST)
      if os.path.isfile(SSH_ROOT_KNOWN_HOST) :
           os.remove(SSH_ROOT_KNOWN_HOST)
-     #
-#     print('Please input Yes/yes/y for below tests to initialization....')
-#     os.system(WIN_SSH_COPY_ID_PATH + ' -i ' + os_user + '@'+ os_ip_addr ) 
-     # Detect PTU PATH and parameters settings
-     PTUGEN_P100_3SECS, PTUMON_3SECS, PTUMON_PATH, PTUGEN_PATH = ptu_parameters_detect_initial()
-     # Run load on host system with PTU 100% loading for 3secs 
-
-#     try:
-     #print("Press enter to continue")
-     ssh_send_cmd_switch(background_run_disable,  PTUGEN_PATH , PTUGEN_P100_3SECS, LOG_SAVE_OFF )
+     # Check if OS available now
+     OS_STS = 0
+     timeout = 0
+     # Change Aardvark target to ME 
+     ipmi.target = pyipmi.Target(target_me_addr)
+     target_routing = [(0x2c,6)]
+     ipmi.target.set_routing(target_routing)
+     while(OS_STS == 0 and timeout != OS_BOOT_FAIL_TIMEOUT):
+          OS_STS = check_os_available(ipmi)
+          DEBUG('OS Not Ready , OS_STS = %d' %OS_STS)
+          time.sleep(1)
+          timeout = timeout + 1
+     if(timeout == OS_BOOT_FAIL_TIMEOUT ):
+          print(test_enviornment_initial_check.__name__ + 'Error !! System Not In OS, Can Not initiallization ' )
+          return ERROR         
+     #Initial OS PTU
+     PTU_INITIAL_SCRIPT = ptu_initial_script_detect(ipmi)
+     sts = ssh_send_cmd_switch(background_run_disable,  SSH_CMD_PATH_EMPTY , PTU_INITIAL_SCRIPT, LOG_SAVE_OFF )
+     if(sts == ERROR ):
+          print(test_enviornment_initial_check.__name__ + 'Error !! Can Not Send SSH cmd via LAN ' )
+          return ERROR 
+          
      return SUCCESSFUL
- #    except SyntaxError:
- #         print('no input data.....')
- #         return ERROR
- #         
- #    return SUCCESSFUL
-         
+     
 ## Below is __Main__
-#sts = 0
-#while(sts == 0):
-#     sts = check_os_available()
-#     DEBUG('sts = %d' %sts)
-
-#sts = 0
-#while(sts == 0):
-#sts = check_os_available()
 
 # Initial aardvark
 ipmi = aardvark_ipmi_init(target_me_addr, target_me_bridge_channel)
 # OS envrionment check:
-sts = test_enviornment_initial_check()
+sts = test_enviornment_initial_check(ipmi)
 if(sts ==SUCCESSFUL):
      test_schedule = test_schedule()
      sts = run_schedule_py(ipmi, test_schedule)
      sts = print_test_result()
 else:
      print('__Main__: ERROR !! Please check ssh and network environment settings....')
-# Config Test List file
-#test_schedule = test_schedule()
-#sts = run_schedule_py(ipmi, test_schedule)
-# Print Test Result
-#sts = print_test_result()
+
 
 

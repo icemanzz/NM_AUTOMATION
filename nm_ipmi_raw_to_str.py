@@ -1,6 +1,7 @@
 from os_parameters_define import *
 from utility_function import *
 from nm_network_handle import *
+from config import *
 
 
 ## Function : MESDC CMD Converter 0x26h cmd to str format

@@ -1,15 +1,11 @@
 ## Parameters Define :
-# Function SWITCH : Enable = 1 / Disable = 0  Print Debug Message function
-DEBUG_ENABLE = 1
-# Define SYSTEM OS Boot Up TIMEOUT
-OS_BOOT_FAIL_TIMEOUT = 180
 # Path of Test Item List
-NM_TEST_LIST_LINUX = '/home/howard/web_page/nm_test_list'
+NM_TEST_LIST_LINUX = 'nm_test_list'
 NM_TEST_FILE_LINUX = 'nm_test_list'
-NM_TEST_LIST_WIN = 'C:\\cygwin64\\home\\nm_test_list.log'
-NM_TEST_FILE_WIN = 'nm_test_list.log'
+NM_TEST_LIST_WIN = 'nm_test_list'
+NM_TEST_FILE_WIN = 'nm_test_list'
 # Path of PTUGEN and PTUMON utility
-PTU_MON_LOG  = '/home/howard/ptumon_log'
+PTU_MON_LOG  = 'ptumon_log'
 ## Below define empty path 
 SSH_CMD_PATH_EMPTY  = ' '
 ##  SSH IGNORE HOST KEY CHECK 
@@ -55,13 +51,11 @@ LINUX_BACKGROUND_RUN = 'nohup '
 LOG_SAVE_OFF = 0
 LOG_SAVE_EN  = 1
 ## Define SSH LOG FILE PATH
-#SSH_LOG_PATH_LINUX = '/home/howard/nm_ssh_log'
-#SSH_LOG_PATH_WIN = 'C:\\cygwin64\\home\\nm_ssh_log'
 SSH_LOG_PATH_LINUX = 'nm_ssh_log'
 SSH_LOG_PATH_WIN = 'nm_ssh_log'
 # Path of OS RTC LOG
-OS_RTC_LOG   = '/home/howard/os_rtc'
-OS_RTC_LOG_WIN   = 'C:\\cygwin64\\home\\os_rtc.log'
+OS_RTC_LOG   = 'os_rtc'
+OS_RTC_LOG_WIN   = 'os_rtc'
 ## Define result file
 TEST_RESULT_WIN = 'nm_test_result'
 TEST_RESULT_LINUX = 'nm_test_result'
@@ -126,17 +120,13 @@ NONE        = 'NONE'
 SUCCESSFUL   = '0'
 ERROR        = 'ERROR'
 # Debug OS Type define = 'win' or 'linux'
-DEBUG_OS_TYPE = 'linux'
 os_linux = 'linux'
 os_win   = 'win'
-#DEBUG_OS_TYPE = 'linux'
 # CMD RUNNING TYPE
 background_run_disable = 0
 background_run_enable  = 1
 # OS User Name
 os_user      = 'root'
-# define target os ip mode :dhcp_ip_mode_en = 0  os ip =  os_ip_addr , dhcp_ip_mode_en = 1 os ip = dynamic dhcp ip
-dhcp_ip_mode_en = 0 
 # define max target ip range
 start_ip_range = 3
 end_ip_range = 254
@@ -144,8 +134,6 @@ head_ip_add  = '192.168.0.'
 # define ping parameter for win and linux
 WIN_PING_PARAMETER = ' -n 1 -w 10 '
 LINUX_PING_PARAMETER = ' -c 1 -W 10 '
-# network IP settings
-os_ip_addr   = '192.168.0.222'
 # BMC network settings
 bmc_ip_addr  = '192.168.0.87'
 user         = 'root'

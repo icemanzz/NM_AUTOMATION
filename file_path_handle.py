@@ -16,6 +16,7 @@ from os_parameters_define import *
 from utility_function import *
 from nm_ipmi_raw_to_str import *
 from error_messages_define import *
+from config import *
 
 ##Function :  GET SSH known_hosts FILE PATH
 def get_ssh_known_host_path():
