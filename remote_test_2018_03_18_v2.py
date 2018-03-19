@@ -1686,6 +1686,8 @@ def NM_WS_004_WIN(ipmi):
          time_count = time_count + 1
          time.sleep(1)
      print(NM_WS_004_WIN.__name__ + ':System already reboot and before EOP state, start to check Boot Time power capping function...')
+     # Delay 5 secs
+     time.sleep(5)
      # Check if Limiting Policy ID =  3 via 0xF2 cmd
      limiting_policy_id = get_limiting_policy_id(ipmi , f2h_platform_domain )
      print(NM_WS_004_WIN.__name__  + ': Current Limiting Policy ID = %d' %limiting_policy_id)
@@ -1985,7 +1987,9 @@ def SMART_001_WIN(ipmi):
      if(rsp == ERROR):
          print('ERROR!!! send pmbus error ! respond data error')
          SMART_PSU_RECOVERY(ipmi,default_ot_warm_low_byte, default_ot_warm_high_byte, bus, target_addr )
-         return ERROR     
+         return ERROR
+     # Delay 15 secs , make sure event triggered
+     time.sleep(15)
      # Send Package Thermal Status again via ME RAW PECI proxy. Check event happen
      resp = send_raw_peci_py(ipmi, peci_40h_client_addr_cpu0, peci_40h_interface_fall_back, 5, 5, raw_peci )
      if(resp == ERROR):
@@ -2862,8 +2866,21 @@ def PTU_003_WIN(ipmi):
      # Reset OS and DC power via ACPI process
      ssh_send_cmd_switch(background_run_enable,  SSH_CMD_PATH_EMPTY , centos_reset, LOG_SAVE_OFF )     
      # Waiting System Reboot.
-     print(PTU_003_WIN.__name__ + ':Wait 30 secs for system reboot Test')
-     time.sleep(30)
+     print(PTU_003_WIN.__name__ + ':Wait for system reboot Test')
+     # Check if system reboot and before BIOS EOP
+     eop = 1
+     time_count = 0
+     while(eop == 1 and time_count != OS_BOOT_FAIL_TIMEOUT):
+         rsp, current_status, operation_state , eop= mesdc_get_version_py(ipmi)
+         if(rsp == ERROR):
+             print(PTU_003_WIN.__name__ + ':NM PTU TEST FAIL !!!')
+             return ERROR
+         if(time_count > 30): # Make sure program will not go to dead loop due to system error status
+             print(PTU_003_WIN.__name__ + ':NM PTU TEST FAIL !!!')
+             return ERROR
+             
+         time_count = time_count + 1
+         time.sleep(1)
      # Check NM PTU Activate status
      manufacture_optin, bios_optin, bmc_activate, bios_activate, oem_empty_run, rom_launch, bmc_phase_only = mesdc_get_nm_ptu_launch_state_py(ipmi)
      if( (manufacture_optin != 1) or (bios_optin!= 1) or (bmc_activate != 1) or  (rom_launch != 1)):
@@ -2872,8 +2889,7 @@ def PTU_003_WIN(ipmi):
          print(PTU_003_WIN.__name__ + ':manufacture_optin = %d , bios_optin = %d , bmc_activate = %d, bios_activate =%d , rom_launch = %d , bmc_phase_only = %d' %(manufacture_optin, bios_optin, bmc_activate , bios_activate, rom_launch , bmc_phase_only ))     
          return ERROR  
      # Waiting for NM PTU Test finish 
-     print(PTU_003_WIN.__name__ + ':Wait 120 secs for NM PTU Calibration testing....')
-     time.sleep(120)
+     print(PTU_003_WIN.__name__ + ':Wait  for NM PTU Calibration testing....')
      # Check if ME receive EOP
      eop = 0
      time_count = 0
