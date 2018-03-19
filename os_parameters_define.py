@@ -29,7 +29,7 @@ HECI_TOOL_PATH = '/root/build_centos_ios/SPS_Tools_4.2.86.64_int/HeciCmdsTool/Li
 # Define HECI MEADDR
 HECI_MEADDR = '0x20'
 # Define HECI CMD
-HECI_GET_ME_BIOS_INTERFACE_CMD = '00000001'
+HECI_GET_ME_BIOS_INTERFACE_CMD = '01'
 # Define offset of data from keywork in spsinfo tool
 HECI_RESPOND_KEYWORD_OFFSET = 1
 # Define spsinfo keyword registers 
