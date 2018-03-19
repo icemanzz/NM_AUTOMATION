@@ -2628,6 +2628,7 @@ def BIOS_002_WIN(ipmi):
      print('ME RESPOND DATA = ' + rsp)
      major_interface_version = int( rsp[2:3], 0)  # rsp byte2
      minor_interface_version = int( rsp[4:5], 0)  # rsp byte3
+     print('ME BIOS INTERFACE VERSION = %d.%d' %(major_interface_version,minor_interface_version ))
      if( (major_interface_version != 1) or (minor_interface_version != 1)):
           print(' BIOS_002_WIN : Error ! ME-BIOS HECI Interface version error ' )
           return ERROR

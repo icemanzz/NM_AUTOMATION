@@ -46,7 +46,7 @@ def bits_cut( data , offset , length):
          cut      = 1 << ( offset + loop )
          cut_data = cut_data + cut
      result = (data & cut_data) >> offset
-     DEBUG('bit_but: result = %d' %result)
+     #DEBUG('bit_but: result = %d' %result)
 
      return result
 
