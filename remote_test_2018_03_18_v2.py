@@ -2506,7 +2506,7 @@ def spsinfo_log_read(FWSTS_REGISTER_NAME):
      resp_length = 10  # 0x0000F0245 10bytes
      format_option = 0 # In string format respond
      FWSTS = read_keyword_file_from_end(SSH_LOG, FWSTS_REGISTER_NAME , SPS_INFO_KEYWORD_OFFSET , 10 , format_option)
-     DEBUG('FWSTS = ' + FWSTS )
+     DEBUG(FWSTS_REGISTER_NAME + ' = ' + FWSTS )
      if(FWSTS == ERROR ):
          DEBUG('file key word check error!!!')
          return ERROR
@@ -2518,7 +2518,7 @@ def BIOS_001_WIN(ipmi):
 
      #Check SPSInfo response
      FWSTS1 = spsinfo_log_read(SPS_INFO_FWSTS1)
-     if(FWSTS1 != ERROR):
+     if(FWSTS1 == ERROR):
           print(' BIOS_001_WIN : Error ! SpsInfo can not get correct respond data' )
           return ERROR
      print('SpsInfo FWSTS1 :' + FWSTS1)
