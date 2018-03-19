@@ -2486,9 +2486,11 @@ def BIOS_001_WIN(ipmi):
      #Check SPSInfo response
      
      #Check PCI Configuation Register Bus0 Dev0x16 Fun0x1 offset A0
-     val = lspci_read(0, int(0x16), 1, 0xa0 )
-     print('val = %d ' %val )
-     if(val != 1):
+     val = lspci_read(0, 0x16, 1, 0xa0 )
+     HIDM    = get_bits_data_py( val , 0 , 2)
+     print(' HECI Interrupt Delivery Mode (HIDM) = %d ' %val )
+     if(HIDM != 1):
+          print(' Error ! HECI2 Interrupt Delivery Mode (HIDM) = %d , Correct Settings is 0x01 SCI mode ' %val )
           print('BIOS_001_WIN : Register settings Error!  BIOS HECI Interfaces initialization Fail!')
           return ERROR
      
@@ -2858,19 +2860,16 @@ def test_enviornment_initial_check(ipmi):
      
 ## Below is __Main__
 
-val = lspci_read(0, 0x16 , 1, 0x43 )
-print('val = %d ' %val )
-
 # Initial aardvark
-##ipmi = aardvark_ipmi_init(target_me_addr, target_me_bridge_channel)
+ipmi = aardvark_ipmi_init(target_me_addr, target_me_bridge_channel)
 # OS envrionment check:
-##sts = test_enviornment_initial_check(ipmi)
-##if(sts ==SUCCESSFUL):
-##     test_schedule = test_schedule()
-##     sts = run_schedule_py(ipmi, test_schedule)
-##     sts = print_test_result()
-##else:
-##     print('__Main__: ERROR !! Please check ssh and network environment settings....')
+sts = test_enviornment_initial_check(ipmi)
+if(sts ==SUCCESSFUL):
+     test_schedule = test_schedule()
+     sts = run_schedule_py(ipmi, test_schedule)
+     sts = print_test_result()
+else:
+     print('__Main__: ERROR !! Please check ssh and network environment settings....')
 
 
 
