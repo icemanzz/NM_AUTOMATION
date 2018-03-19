@@ -22,6 +22,8 @@ PURLEY_SSH_PTU_INIT_SCRIPT  = '/root/PTU/PURLEY/ptu_purley_init.sh'
 MEHLOW_PTUGEN_PATH  = '/root/PTU/Mehlow/cflptugen'
 MEHLOW_PTUMON_PATH  = '/root/PTU/Mehlow/cflptumon'
 MEHLOW_SSH_PTU_INIT_SCRIPT  = '/root/PTU/Mehlow/ptu_mehlow_init.sh'
+# Define spsinfo path in iso OS
+SPS_INFO_PATH = '/root/build_centos_iso/SPS_Tools_4.2.86.64_int/Sps_Info/Linux64/spsInfoLinux64'
 ##Window ssh tool path
 WIN_SSH_PATH = 'C:\\cygwin64\\bin\\ssh.exe '
 WIN_SSH_COPY_ID_PATH = 'C:\\cygwin64\\bin\\ssh-copy-id '
@@ -62,7 +64,9 @@ NM_TEST_ITEM = [  'NM_000',   'NM_001',     'NM_002','NM_003',   'NM_004',   'NM
                 'PTU_001', 'PTU_002', 'PTU_003', 'PTU_004', \
                 'NM_WS_001', 'NM_WS_002', 'NM_WS_003', 'NM_WS_004', 'NM_WS_005', 'NM_WS_006', 'NM_WS_007', 'NM_WS_008', 'NM_WS_009', 'NM_WS_010', \
                 'PTT_003', 'PTT_004', \
-                'BTG_003']
+                'BTG_003',  \
+                'BIOS_001', 'BIOS_002', 'BIOS_003', 'BIOS_004', \
+                'ME_001', 'ME_002', 'ME_003', 'ME_004', 'ME_005', 'ME_006', 'ME_007', 'ME_008', 'ME_009', 'ME_010', 'ME_011', 'ME_012', 'ME_013', 'ME_014', 'ME_015', 'ME_016']
 # Test Item ID
 NM_000       = 0
 NM_001       = 1
@@ -105,7 +109,7 @@ NONE        = 'NONE'
 SUCCESSFUL   = '0'
 ERROR        = 'ERROR'
 # Debug OS Type define = 'win' or 'linux'
-DEBUG_OS_TYPE = 'win'
+DEBUG_OS_TYPE = 'linux'
 os_linux = 'linux'
 os_win   = 'win'
 #DEBUG_OS_TYPE = 'linux'
@@ -124,7 +128,7 @@ head_ip_add  = '192.168.0.'
 WIN_PING_PARAMETER = ' -n 1 -w 10 '
 LINUX_PING_PARAMETER = ' -c 1 -W 10 '
 # network IP settings
-os_ip_addr   = '10.5.250.16'
+os_ip_addr   = '192.168.0.246'
 # BMC network settings
 bmc_ip_addr  = '192.168.0.87'
 user         = 'root'
