@@ -2435,6 +2435,9 @@ def PTT_004_WIN(ipmi):
 
 ## Function : Read PCI Configuration Register via Linux LSPCI
 def lspci_read(bus, device, function, offset):
+     # Just change 0xXX to XX in hex format 
+     device = format(device, 'x')
+     # Config lspci cmd string
      TEST_CMD = 'lspci -xxx -s ' + str(bus) + ':' + str(device) + '.' + str(function)
      #Send lspci
      sts = ssh_send_cmd_switch(background_run_disable,  SSH_CMD_PATH_EMPTY , TEST_CMD, LOG_SAVE_EN )
@@ -2855,7 +2858,7 @@ def test_enviornment_initial_check(ipmi):
      
 ## Below is __Main__
 
-val = lspci_read(0, int(0x1), 1, 0x43 )
+val = lspci_read(0, 0x16 , 1, 0x43 )
 print('val = %d ' %val )
 
 # Initial aardvark
