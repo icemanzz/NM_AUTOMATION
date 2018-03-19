@@ -1159,7 +1159,7 @@ def run_schedule_py(ipmi, test_schedule):
      file.write('//////////////// Test  Result ////////////// \n')
      file.close()          
      # Base on system configuation to disable Non-Support test items in test_schedule
-     system_config_detect_py(ipmi)
+     #system_config_detect_py(ipmi)
      count = 0
      for test_item in test_schedule:
           # Restore to SPS FW to default for next test Item
