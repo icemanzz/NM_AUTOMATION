@@ -2590,7 +2590,7 @@ def heci_cmd_tool_send(MEADDR, HECI_CMD , RSP_LENGTH):
      resp_length = RSP_LENGTH*2  
      format_option = 0 # In string format respond
      keyword = 'RESPONSE:'
-     rsp = read_keyword_file_from_end(SSH_LOG, FWSTS_REGISTER_NAME , HECI_RESPOND_KEYWORD_OFFSET , resp_length , format_option)
+     rsp = read_keyword_file_from_end(SSH_LOG, keyword , HECI_RESPOND_KEYWORD_OFFSET , resp_length , format_option)
      DEBUG( 'ME RESPONSE = ' + rsp )
      if(rsp == ERROR ):
          DEBUG('file key word check error!!!')
