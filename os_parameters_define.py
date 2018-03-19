@@ -128,7 +128,7 @@ head_ip_add  = '192.168.0.'
 WIN_PING_PARAMETER = ' -n 1 -w 10 '
 LINUX_PING_PARAMETER = ' -c 1 -W 10 '
 # network IP settings
-os_ip_addr   = '192.168.0.246'
+os_ip_addr   = '192.168.0.222'
 # BMC network settings
 bmc_ip_addr  = '192.168.0.87'
 user         = 'root'
