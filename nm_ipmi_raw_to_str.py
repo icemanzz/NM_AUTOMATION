@@ -23,6 +23,29 @@ def mesdc_26h_mctp_statistic_raw_to_str_py( ):
      return netfun, mesdc_26h_mctp_statistic_raw
 
 ## Function : MESDC CMD Converter 0x26h cmd to str format
+def mesdc_26h_read_power_data_raw_to_str_py( addr ):
+     netfun  = 0x30
+     cmd     = '0x26'
+     addr_low_byte = addr[0]
+     addr_high_byte = addr[1]
+     # Setup 26h_raw
+     mesdc_26h_read_power_data_raw = [cmd,'0x57','0x01','0x00','0x04','0x06','0x04', '0x9F', '0xB0', addr_low_byte, addr_high_byte]
+
+     return netfun, mesdc_26h_read_power_data_raw
+
+
+## Function : MESDC CMD Converter 0x26h cmd to str format : SUSRAM file for NONCE status  is ASCII CODE : fwnoncest => 66 77 6e 6f 6e 63 65 73 74 00
+def mesdc_26h_susram_hmrfpo_nonce_raw_to_str_py( ):
+     netfun  = 0x30
+     cmd     = '0x26'
+     # Setup 26h_raw
+     mesdc_26h_susram_hmrfpo_nonce_raw = [cmd,'0x57','0x01','0x00','0x04','0x06','0x0F', '0xD3', '0x76', '0x00', '0x00', '0x20', '0x66', '0x77', '0x6E', '0x6F', '0x6E', '0x63', '0x65', '0x73', '0x74', '0x00',]
+
+     return netfun, mesdc_26h_susram_hmrfpo_nonce_raw
+
+
+
+## Function : MESDC CMD Converter 0x26h cmd to str format
 def mesdc_26h_nm_ptu_launch_state_raw_to_str_py( ):
      netfun  = 0x30
      cmd     = '0x26'

@@ -24,6 +24,14 @@ MEHLOW_PTUMON_PATH  = '/root/PTU/Mehlow/cflptumon'
 MEHLOW_SSH_PTU_INIT_SCRIPT  = '/root/PTU/Mehlow/ptu_mehlow_init.sh'
 # Define spsinfo path in iso OS
 SPS_INFO_PATH = '/root/build_centos_ios/SPS_Tools_4.2.86.64_int/SpsInfo/Linux64/spsInfoLinux64'
+# Define HeciCmdsTool
+HECI_TOOL_PATH = '/root/build_centos_ios/SPS_Tools_4.2.86.64_int/HeciCmdsTool/Linux64/HeciCmdsToolLinux64'
+# Define HECI MEADDR
+HECI_MEADDR = '0x20'
+# Define HECI CMD
+HECI_GET_ME_BIOS_INTERFACE_CMD = '00000001'
+# Define offset of data from keywork in spsinfo tool
+HECI_RESPOND_KEYWORD_OFFSET = 1
 # Define spsinfo keyword registers 
 SPS_INFO_FWSTS1 = 'FW Status Register 1:'
 SPS_INFO_FWSTS2 = 'FW Status Register 2:'

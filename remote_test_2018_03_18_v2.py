@@ -395,6 +395,40 @@ def mesdc_get_mctp_statistic_py(ipmi):
 
      return number_of_mctp_discoverd
 
+
+## Function : Netfun: 0x30 , CMD :0x26H, MESDC Read Power Data
+def mesdc_read_power_data_py(ipmi):
+     # Conver address value to int value
+     addr = int(addr)
+     # Coverter address int value to 2 bytes hex value 
+     hex_addr_arry = int_to_hex( addr, 2 )
+     netfn, mesdc_26h_read_power_data_raw = mesdc_26h_read_power_data_raw_to_str_py(hex_addr_arry)
+     # Send MESDC 0x26h Read Power Data with command option
+     rsp = send_ipmb_aardvark(ipmi , netfn , mesdc_26h_read_power_data_raw )
+     # Check if rsp data correct
+     sts = ipmi_resp_analyst_py( ord(rsp[0]), Controller_OEM )
+     if(sts != SUCCESSFUL ):
+         return ERROR
+     print('mesdc_read_power_data_py : ME RSP DATA = 0x%x%x%x%x' %(ord(rsp[13]),ord(rsp[12]) ,ord(rsp[11]) ,ord(rsp[10])))
+
+     return rsp
+
+## Function : Netfun: 0x30 , CMD :0x26H, MESDC Read SUSRAM HMRFPO NANCE  STATUS
+def mesdc_susram_hmrfpo_nonce_py(ipmi):
+     netfn, mesdc_26h_susram_hmrfpo_nonce_raw = mesdc_26h_susram_hmrfpo_nonce_raw_to_str_py()
+     # Send MESDC 0x26h MCTP statistic with command option
+     rsp = send_ipmb_aardvark(ipmi , netfn , mesdc_26h_susram_hmrfpo_nonce_raw )
+     # Check if rsp data correct
+     sts = ipmi_resp_analyst_py( ord(rsp[0]), Controller_OEM )
+     if(sts != SUCCESSFUL ):
+         return ERROR
+     print('mesdc_susram_hmrfpo_nonce_py : HMRFPO NONCE STATUS = %d' %ord(rsp[11]))
+     HMRFP_NONCE_STATUS = ord(rsp[11])
+
+     return HMRFP_NONCE_STATUS
+
+
+
 ## Function : Netfun: 0x30 , CMD :0x26H, MESDC Get NM PTU Launch state cmd
 def mesdc_get_nm_ptu_launch_state_py(ipmi):
      netfn, mesdc_26h_nm_ptu_launch_state_raw = mesdc_26h_nm_ptu_launch_state_raw_to_str_py()
@@ -1245,6 +1279,14 @@ def run_schedule_py(ipmi, test_schedule):
                print('Start to run BIOS_001 test ....')
                sts = BIOS_001_WIN(ipmi)
                NM_TEST_STS[test_item] = sts
+          elif(test_item == 64):
+               print('Start to run BIOS_002 test ....')
+               sts = BIOS_002_WIN(ipmi)
+               NM_TEST_STS[test_item] = sts
+          elif(test_item == 65):
+               print('Start to run BIOS_003 test ....')
+               sts = BIOS_003_WIN(ipmi)
+               NM_TEST_STS[test_item] = sts
           elif(test_item == 66):
                print('Start to run BIOS_004 test ....')
                sts = BIOS_004_WIN(ipmi)
@@ -1256,6 +1298,10 @@ def run_schedule_py(ipmi, test_schedule):
           elif(test_item == 69):
                print('Start to run ME_003 test ....')
                sts = ME_003_WIN(ipmi)
+               NM_TEST_STS[test_item] = sts
+          elif(test_item == 82):
+               print('Start to run ME_016 test ....')
+               sts = ME_016_WIN(ipmi)
                NM_TEST_STS[test_item] = sts
           else:
                print('test item not in list .....')
@@ -2513,6 +2559,45 @@ def spsinfo_log_read(FWSTS_REGISTER_NAME):
                    
      return FWSTS
 
+## Function : Send HECI cmd via Linux HECICMDTOOL
+def heci_cmd_tool_send(MEADDR, HECI_CMD , RSP_LENGTH):
+     # Config lspci cmd string
+     TEST_CMD = ' -MEADDR ' + MEADDR +  ' -PAYLOAD ' + HECI_CMD
+     #Run spsinfo
+     sts = ssh_send_cmd_switch(background_run_disable,  HECI_TOOL_PATH , TEST_CMD , LOG_SAVE_EN )
+     if(sts == ERROR ):
+          print(spsinfo_log_read.__name__ + 'Error !! Can Not Send SSH cmd via LAN ' )
+          return ERROR
+     #Check HECI tool response
+     NM_TEST_LIST, NM_TEST_FILE, SSH_LOG = get_test_list_path()
+     # Read Test Item from file
+     if os.path.isfile(SSH_LOG) :
+          DEBUG('file exist')
+          file = open(SSH_LOG, 'r')
+          with open(SSH_LOG, "r") as ins:
+              test_list = []
+              for line in ins:
+                  test_list.append(line.rstrip('\n'))
+          file.close()
+          DEBUG(test_list)
+          if(len(test_list) == 0):
+              DEBUG('SSH get file not exist') 
+              return ERROR 
+     else:
+         DEBUG('file not exist')        
+         return ERROR
+     #Check Register val 
+     resp_length = RSP_LENGTH*2  
+     format_option = 0 # In string format respond
+     keyword = 'RESPONSE:'
+     rsp = read_keyword_file_from_end(SSH_LOG, FWSTS_REGISTER_NAME , HECI_RESPOND_KEYWORD_OFFSET , resp_length , format_option)
+     DEBUG( 'ME RESPONSE = ' + rsp )
+     if(rsp == ERROR ):
+         DEBUG('file key word check error!!!')
+         return ERROR
+                   
+     return rsp
+
 ## Function : BIOS_001 Test Process: Verify  BIOS HECI Interfaces initialization
 def BIOS_001_WIN(ipmi):
 
@@ -2533,10 +2618,34 @@ def BIOS_001_WIN(ipmi):
      
      return SUCCESSFUL
 
+## Function : BIOS_002 Test Process: Test BIOS Get Interface Version message
+def BIOS_002_WIN(ipmi):
+     # Send SPS Get ME BIOS INTERFACE HECI CMD and expect to get 11 bytes respond data 
+     rsp = heci_cmd_tool_send(HECI_MEADDR, HECI_GET_ME_BIOS_INTERFACE_CMD, 11)
+     if(rsp == ERROR):
+          print(' BIOS_002_WIN : Error ! heci cmd can not get correct respond data' )
+          return ERROR
+     print('ME RESPOND DATA = ' + rsp)
+     major_interface_version = int( rsp[2:3], 0)  # rsp byte2
+     minor_interface_version = int( rsp[4:5], 0)  # rsp byte3
+     if( (major_interface_version != 1) or (minor_interface_version != 1)):
+          print(' BIOS_002_WIN : Error ! ME-BIOS HECI Interface version error ' )
+          return ERROR
+     
+     return SUCCESSFUL
+
+
 ## Function : BIOS_003 Test Process: Verify  BIOS HECI HMRFPO LOCK STATUS
 def BIOS_003_WIN(ipmi):
      # Send HMRFPO GET STATUS
-     
+     hmrfpo_sts = mesdc_susram_hmrfpo_nonce_py(ipmi)
+     if(hmrfpo_sts == ERROR):
+          print(' BIOS_003_WIN : Error ! susram get nonce status can not get correct respond data' )
+          return ERROR     
+     if(hmrfpo_sts != 1):
+          print(' BIOS_003_WIN : Error ! ME no received BIOS HMRFPO_LOCK cmd' )
+          return ERROR
+          
      return SUCCESSFUL
 
 
@@ -2574,13 +2683,32 @@ def ME_001_WIN(ipmi):
      
 ## Function : ME_003 Test Process:  Platform stability after Reset To Defaults
 def ME_003_WIN(ipmi):
-     # Restore to SPS FW to default for next test Item
+     # Restore to SPS FW to default 
      sts_restore = facture_default_py(ipmi, dfh_command_restore_default)
      if(sts_restore == SUCCESSFUL):
           print('ME_003_WIN : SPS FW back to facture default settings for next text item ready')
      else:
           print('ME_003_WIN : SPS FW restore Fail!!')
           return ERROR
+     
+     return SUCCESSFUL
+
+
+## Function : ME_016 Test Process:  MESDC over IPMB commands functional in Recovery Mode
+def ME_016_WIN(ipmi):
+     # Send 0xDF cmd  to SPS FW to put ME into Recovery mode 
+     sts_restore = facture_default_py(ipmi, dfh_command_recovery)
+     if(sts_restore == SUCCESSFUL):
+          print('ME_016_WIN : SPS FW boot into recovery mode for test now ...')
+     else:
+          print('ME_016_WIN : Error ! SPS FW can not boot into recovery mode.  ')
+          return ERROR
+     # Send MESDC Read Power Data cmd : 0xF280
+     rsp = mesdc_read_power_data_py(ipmi, 0xF280)
+     if(rsp == ERROR):
+          print('ME_016_WIN : Error ! Read Power Data via MESDC Fail.  ')
+          return ERROR
+     print('mesdc_read_power_data_py : ME RSP DATA = 0x%x%x%x%x' %(ord(rsp[13]),ord(rsp[12]) ,ord(rsp[11]) ,ord(rsp[10])))
      
      return SUCCESSFUL
 

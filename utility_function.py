@@ -215,9 +215,9 @@ def read_keyword_file_from_end(file_path, key_word, offset , resp_length, format
      # Detect Key Word location
      m = re.search(key_word, mf)
      # print data location
-     DEBUG('read_keyword_file(): key word location as below range in file:')
-     DEBUG( m.start())
-     DEBUG( m.end())
+     #DEBUG('read_keyword_file(): key word location as below range in file:')
+     #DEBUG( m.start())
+     #DEBUG( m.end())
      # Serch data from keyword + offset location, storage data in str format
      mf.seek((int(m.end()) + offset))
      str = mf.readline()
