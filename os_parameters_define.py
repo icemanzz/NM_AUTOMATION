@@ -23,7 +23,7 @@ MEHLOW_PTUGEN_PATH  = '/root/PTU/Mehlow/cflptugen'
 MEHLOW_PTUMON_PATH  = '/root/PTU/Mehlow/cflptumon'
 MEHLOW_SSH_PTU_INIT_SCRIPT  = '/root/PTU/Mehlow/ptu_mehlow_init.sh'
 # Define spsinfo path in iso OS
-SPS_INFO_PATH = '/root/build_centos_iso/SPS_Tools_4.2.86.64_int/Sps_Info/Linux64/spsInfoLinux64'
+SPS_INFO_PATH = '/root/build_centos_ios/SPS_Tools_4.2.86.64_int/SpsInfo/Linux64/spsInfoLinux64'
 # Define spsinfo keyword registers 
 SPS_INFO_FWSTS1 = 'FW Status Register 1:'
 SPS_INFO_FWSTS2 = 'FW Status Register 2:'
