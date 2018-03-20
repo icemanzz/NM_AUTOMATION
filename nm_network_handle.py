@@ -17,7 +17,6 @@ from utility_function import *
 from nm_ipmi_raw_to_str import *
 from error_messages_define import *
 from config import *
-from RUN_NM_TESTS import *
 
 ##Function :  ping parameter detect:
 def ping_parameter_detect():
@@ -72,8 +71,6 @@ def ssh_send_cmd_switch( background_run,  PROGRAM_PATH , STRESS_CMD , LOG_SAVE )
           file.close()
           DEBUG('TEST OS IP LIST : ' )
           DEBUG( ip_list)
-          # Detect PTU PATH and parameters settings
-          PTUGEN_P100_30SECS, PTUMON_3SECS, PTUMON_PATH, PTUGEN_PATH = ptu_parameters_detect(ipmi)
           # Remove old KNOWN_HOST in .ssh folder :
           SSH_KNOWN_HOST, SSH_ROOT_KNOWN_HOST = get_ssh_known_host_path()
           if os.path.isfile(SSH_KNOWN_HOST) :
@@ -81,7 +78,7 @@ def ssh_send_cmd_switch( background_run,  PROGRAM_PATH , STRESS_CMD , LOG_SAVE )
           if os.path.isfile(SSH_ROOT_KNOWN_HOST) :
               os.remove(SSH_ROOT_KNOWN_HOST)
           # Define IP test cmd
-          TEST_CMD = 'ls ' + PTUGEN_PATH
+          TEST_CMD = 'ls ' 
      # Start Send ssh cmd to Target OS IP address
      if(DEBUG_OS_TYPE == os_linux):
           if(background_run == background_run_enable and ip_search_done == 1):
