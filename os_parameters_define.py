@@ -61,6 +61,7 @@ TEST_RESULT_WIN = 'nm_test_result'
 TEST_RESULT_LINUX = 'nm_test_result'
 #define previous OS IP data log path
 OS_IP_LOG = 'nm_os_ip'
+OS_IP_TEST_LIST = 'nm_os_ip_check_list'
 # OS RTC TIME CMD
 OSRTC  = 'timedatectl'
 # Defualt RTC TIME
@@ -129,7 +130,7 @@ background_run_enable  = 1
 os_user      = 'root'
 # define max target ip range
 start_ip_range = 3
-end_ip_range = 254
+end_ip_range = 50
 head_ip_add  = '192.168.0.'
 # define ping parameter for win and linux
 WIN_PING_PARAMETER = ' -n 1 -w 10 '
