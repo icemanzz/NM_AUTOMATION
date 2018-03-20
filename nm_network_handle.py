@@ -177,7 +177,8 @@ def ip_search( current_check_ip ):
                print ip_list[0], ' is up!'
                print('Set Target IP : ' + ip_list[0])
                ip_search_done = 1
-               return ip_list[0], ip_search_done
+               ip_range = end_ip_range
+               return ip_list[0], ip_range, ip_search_done
           else:
                DEBUG( 'Previous IP ' + ip_list[0] + ' is down! Search New Target IP Again...')
                #delete previous ip log
