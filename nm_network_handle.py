@@ -169,7 +169,7 @@ def ip_search( current_check_ip ):
 
      # Start OS IP re-search process                     
      ip_range = current_check_ip
-     DEBUG('ip_search : ip_range ='+ ip_range)
+     DEBUG('ip_search : ip_range = %d ' %ip_range)
      for ip_range in range(ip_range , end_ip_range ):
           ip_addr  = head_ip_add + str(ip_range)
           rsp = os.system('ping '+ PING_PARAMETER + ip_addr)
