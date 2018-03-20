@@ -69,7 +69,8 @@ def ssh_send_cmd_switch( background_run,  PROGRAM_PATH , STRESS_CMD , LOG_SAVE )
               for line in ins:
                   ip_list.append(line.rstrip('\n'))
           file.close()
-          DEBUG('TEST OS IP LIST : ' + ip_list )         
+          DEBUG('TEST OS IP LIST : ' )
+          DEBUG( ip_list)
           # Detect PTU PATH and parameters settings
           PTUGEN_P100_30SECS, PTUMON_3SECS, PTUMON_PATH, PTUGEN_PATH = ptu_parameters_detect(ipmi)
           # Remove old KNOWN_HOST in .ssh folder :
