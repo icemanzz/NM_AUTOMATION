@@ -17,6 +17,7 @@ from utility_function import *
 from nm_ipmi_raw_to_str import *
 from error_messages_define import *
 from config import *
+from RUN_NM_TESTS import *
 
 ##Function :  ping parameter detect:
 def ping_parameter_detect():
