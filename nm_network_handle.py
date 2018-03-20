@@ -38,14 +38,16 @@ def ssh_send_cmd_switch( background_run,  PROGRAM_PATH , STRESS_CMD , LOG_SAVE )
      if(dhcp_ip_mode_en == 1 ):
           current_os_ip = start_ip_range
           for current_os_ip in range(start_ip_range , end_ip_range):
+               DEBUG(' For start : current_os_ip = %d' %current_os_ip )
                #This IP is Server dynamic assign
                OS_IP, ip_range, ip_search_done = ip_search(current_os_ip)
                current_os_ip = ip_range
-               DEBUG('current_os_ip = %d' %current_os_ip )
+               DEBUG('After ip_search , current_os_ip = %d' %current_os_ip )
                if(OS_IP == ERROR):
                     print('ERROR CAN NOT Find Any IP Available In Target System....')
                     return ERROR 
                if(ip_search_done == 1): # break loop
+                    DEBUG('Got CentOS IP from LOG file ' + )
                     current_os_ip = end_ip_range + 1 # break for  loop
                print('Get Target system IP :' + OS_IP)
                if(ip_search_done == 0):
@@ -53,6 +55,7 @@ def ssh_send_cmd_switch( background_run,  PROGRAM_PATH , STRESS_CMD , LOG_SAVE )
                     file = open(OS_IP_TEST_LIST, 'a')
                     file.write(OS_IP +'\n')
                     file.close()
+
      else:
           # This IP is define in os_parameters_define.py
           OS_IP = os_ip_addr
@@ -166,7 +169,8 @@ def ip_search( current_check_ip ):
 
      # Start OS IP re-search process                     
      ip_range = current_check_ip
-     for ip_range in range(current_check_ip , end_ip_range ):
+     DEBUG('ip_search : ip_range ='+ ip_range)
+     for ip_range in range(ip_range , end_ip_range ):
           ip_addr  = head_ip_add + str(ip_range)
           rsp = os.system('ping '+ PING_PARAMETER + ip_addr)
           #and then check the response...
