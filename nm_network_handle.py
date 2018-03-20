@@ -37,7 +37,7 @@ def ssh_send_cmd_switch( background_run,  PROGRAM_PATH , STRESS_CMD , LOG_SAVE )
      ## Check Netwrok Configuration : Fix IP / DHCP IP
      if(dhcp_ip_mode_en == 1 ):
           current_os_ip = start_ip_range
-          for current_os_ip in range(start_ip_range , end_ip_range):
+          while current_os_ip <  end_ip_range :
                DEBUG(' For start : current_os_ip = %d' %current_os_ip )
                #This IP is Server dynamic assign
                OS_IP, ip_range, ip_search_done = ip_search(current_os_ip)
@@ -55,6 +55,7 @@ def ssh_send_cmd_switch( background_run,  PROGRAM_PATH , STRESS_CMD , LOG_SAVE )
                     file = open(OS_IP_TEST_LIST, 'a')
                     file.write(OS_IP +'\n')
                     file.close()
+               current_os_ip += 1 
 
      else:
           # This IP is define in os_parameters_define.py
