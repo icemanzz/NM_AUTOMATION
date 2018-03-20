@@ -182,8 +182,8 @@ def ip_search( current_check_ip ):
           else:
                DEBUG( ip_addr + ' is down!')
 
-     print('ERROR!!  Can not find any target IP in netwrok , please check network link and make sure target system boot into OS')
-     return ERROR     
+     print('IP Search Finish')
+     return ip_addr, ip_range , ip_search_done     
 
 
      
