@@ -18,6 +18,24 @@ from nm_ipmi_raw_to_str import *
 from error_messages_define import *
 from config import *
 
+##Function :  GET SSH known_hosts FILE PATH
+def get_ssh_known_host_path():
+     ## DEBUG_OS_TYPE is hard code define in os_parameters_define.py 
+     if(DEBUG_OS_TYPE == os_linux):
+          SSH_KNOWN_HOST      = LINUX_SSH_KNOWN_HOST_PATH
+          SSH_ROOT_KNOWN_HOST = LINUX_SSH_ROOT_KNOWN_HOST_PATH
+     elif(DEBUG_OS_TYPE == os_win):
+          SSH_KNOWN_HOST      = WIN_SSH_KNOWN_HOST_PATH
+          SSH_ROOT_KNOWN_HOST = WIN_SSH_KNOWN_HOST_PATH
+     else:
+          DEBUG('NO This OS')
+          return ERROR, ERROR
+
+     DEBUG('SSH_KNOWN_HOST :'+ SSH_KNOWN_HOST)
+     DEBUG('SSH_ROOT_KNOWN_HOST :'+ SSH_ROOT_KNOWN_HOST)
+     
+     return SSH_KNOWN_HOST, SSH_ROOT_KNOWN_HOST
+
 ##Function :  ping parameter detect:
 def ping_parameter_detect():
      ## DEBUG_OS_TYPE is hard code define in os_parameters_define.py 
