@@ -47,7 +47,7 @@ def ssh_send_cmd_switch( background_run,  PROGRAM_PATH , STRESS_CMD , LOG_SAVE )
                     print('ERROR CAN NOT Find Any IP Available In Target System....')
                     return ERROR 
                if(ip_search_done == 1): # break loop
-                    DEBUG('Got CentOS IP from LOG file ' + )
+                    DEBUG('Got CentOS IP from LOG file ' )
                     current_os_ip = end_ip_range + 1 # break for  loop
                print('Get Target system IP :' + OS_IP)
                if(ip_search_done == 0):
