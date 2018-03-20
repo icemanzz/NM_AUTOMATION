@@ -41,6 +41,7 @@ def ssh_send_cmd_switch( background_run,  PROGRAM_PATH , STRESS_CMD , LOG_SAVE )
                #This IP is Server dynamic assign
                OS_IP, ip_range, ip_search_done = ip_search(current_os_ip)
                current_os_ip = ip_range
+               DEBUG('current_os_ip = %d' %current_os_ip )
                if(OS_IP == ERROR):
                     print('ERROR CAN NOT Find Any IP Available In Target System....')
                     return ERROR 
@@ -52,7 +53,6 @@ def ssh_send_cmd_switch( background_run,  PROGRAM_PATH , STRESS_CMD , LOG_SAVE )
                     file = open(OS_IP_TEST_LIST, 'a')
                     file.write(OS_IP +'\n')
                     file.close()
-
      else:
           # This IP is define in os_parameters_define.py
           OS_IP = os_ip_addr
