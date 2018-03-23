@@ -39,8 +39,8 @@ class Aardvark(object):
             raise RuntimeError('No pyaardvark module found. You can not '
                     'use this interface.')
         self.slave_address = slave_address
-        self.timeout = 0.5 # default = 0.25 = 250 ms
-        self.max_retries = 8 #default 3
+        self.timeout = 5 # default = 0.25 = 250 ms
+        self.max_retries = 10 #default 3
         self.next_sequence_number = 0
 
         self._dev = pyaardvark.open(port, serial_number)
@@ -161,10 +161,11 @@ class Aardvark(object):
         header.rs_sa = target.ipmb_address
         header.rq_seq = self.next_sequence_number
         header.rq_lun = 0
-        header.rq_sa = self.slave_address
+        #header.rq_sa = self.slave_address
+        header.rq_sa = 0x22
         header.cmd_id = cmdid
 
-        retries = 0
+        retries = 10
         while retries < self.max_retries:
             try:
                 self._send_raw(header, payload)
