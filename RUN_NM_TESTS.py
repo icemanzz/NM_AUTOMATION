@@ -91,13 +91,17 @@ def check_os_available(ipmi):
      #TEST_CMD  = 'ls /home/howard/follow_me_project/get_position.py'
      TEST_CMD = 'ls ' + PTUGEN_PATH
      OS_STS = 0
-     # Delete previous nm_ssh_log 
-     os.remove(SSH_LOG_PATH_LINUX)
-     # Check PTU floder data is ready
-     ssh_send_cmd_switch(background_run_disable,  SSH_CMD_PATH_EMPTY , TEST_CMD, LOG_SAVE_EN )
      # Check Test List file :
      NM_TEST_LIST, NM_TEST_FILE, SSH_LOG = get_test_list_path()
-     # Read Test Item from file
+     # Delete previous nm_ssh_log 
+     if os.path.isfile(SSH_LOG) :
+          DEBUG('file exist')
+          os.remove(SSH_LOG)
+     else:
+         DEBUG('nm_ssh_log file not exist, no need to delete')        
+     # Check data is ready
+     ssh_send_cmd_switch(background_run_disable,  SSH_CMD_PATH_EMPTY , TEST_CMD, LOG_SAVE_EN )
+     # Read ssh_log file data  from file
      if os.path.isfile(SSH_LOG) :
           DEBUG('file exist')
           file = open(SSH_LOG, 'r')
