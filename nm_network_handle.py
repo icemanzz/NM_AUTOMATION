@@ -55,13 +55,15 @@ def ssh_send_cmd_switch( background_run,  PROGRAM_PATH , STRESS_CMD , LOG_SAVE )
      ## Check Netwrok Configuration : Fix IP / DHCP IP
      if(dhcp_ip_mode_en == 1 ):
           current_os_ip = start_ip_range
+          fetch_ip = 0
           while current_os_ip <  end_ip_range :
                DEBUG(' For start : current_os_ip = %d' %current_os_ip )
                #This IP is Server dynamic assign
-               OS_IP, ip_range, ip_search_done = ip_search(current_os_ip)
+               sts, OS_IP, ip_range, ip_search_done = ip_search(current_os_ip)
                current_os_ip = ip_range
                DEBUG('After ip_search , current_os_ip = %d' %current_os_ip )
-               if(OS_IP == ERROR):
+               if(sts == SUCCESSFUL and fetch_ip == 0 ):
+                    DEBUG('fetch_ip = %d' %fetch_ip)
                     print('ERROR CAN NOT Find Any IP Available In Target System....')
                     return ERROR 
                if(ip_search_done == 1): # break loop
@@ -70,6 +72,7 @@ def ssh_send_cmd_switch( background_run,  PROGRAM_PATH , STRESS_CMD , LOG_SAVE )
                print('Get Target system IP :' + OS_IP)
                if(ip_search_done == 0):
                     ##Save Discoveried DHCP IP
+                    fetch_ip += 1
                     file = open(OS_IP_TEST_LIST, 'a')
                     file.write(OS_IP +'\n')
                     file.close()
@@ -78,6 +81,8 @@ def ssh_send_cmd_switch( background_run,  PROGRAM_PATH , STRESS_CMD , LOG_SAVE )
      else:
           # This IP is define in os_parameters_define.py
           OS_IP = os_ip_addr
+          ip_search_done = 1
+          
      # Prepare IP check list 
      if os.path.isfile(OS_IP_TEST_LIST) and ip_search_done != 1 :
           DEBUG('file exist')
@@ -109,7 +114,7 @@ def ssh_send_cmd_switch( background_run,  PROGRAM_PATH , STRESS_CMD , LOG_SAVE )
           elif(ip_search_done == 0):         
                       count = 0
                       for count in range(0 , len(ip_list)):
-                           rsp = os.system('ssh '+ SSH_IGNORE_HOST_KEY + os_user + '@'+ ip_list[count] + ' -t sudo ' + SSH_CMD_PATH_EMPTY + ' ' + TEST_CMD + ' > ' + SSH_LOG_PATH_LINUX) 
+                           rsp = os.system('ssh '+ SSH_IGNORE_HOST_KEY + os_user + '@'+ ip_list[count] + ' -t sudo ' + SSH_CMD_PATH_EMPTY + ' ' + TEST_CMD) 
                            if rsp == 0:
                                 print ip_list[count], ' is up!'
                                 print('Set CentOS Target IP : ' + ip_list[count])
@@ -117,6 +122,8 @@ def ssh_send_cmd_switch( background_run,  PROGRAM_PATH , STRESS_CMD , LOG_SAVE )
                                 file = open(OS_IP_LOG, 'w')
                                 file.write(ip_list[count])
                                 file.close()
+                                #delete  ip check list log
+                                os.remove(OS_IP_TEST_LIST)
                                 return SUCCESSFUL
                            else:
                                 DEBUG( ip_list[count] + ' is down!')
@@ -135,7 +142,7 @@ def ssh_send_cmd_switch( background_run,  PROGRAM_PATH , STRESS_CMD , LOG_SAVE )
           elif(ip_search_done == 0):         
                       count = 0
                       for count in range(0 , len(ip_list)):
-                           rsp = os.system(WIN_SSH_PATH + SSH_IGNORE_HOST_KEY + os_user + '@'+ ip_list[count] + ' -t sudo ' + SSH_CMD_PATH_EMPTY + ' ' + TEST_CMD + ' > ' + SSH_LOG_PATH_LINUX) 
+                           rsp = os.system(WIN_SSH_PATH + SSH_IGNORE_HOST_KEY + os_user + '@'+ ip_list[count] + ' -t sudo ' + SSH_CMD_PATH_EMPTY + ' ' + TEST_CMD ) 
                            if rsp == 0:
                                 print ip_list[count], ' is up!'
                                 print('Set CentOS Target IP : ' + ip_list[count])
@@ -143,6 +150,8 @@ def ssh_send_cmd_switch( background_run,  PROGRAM_PATH , STRESS_CMD , LOG_SAVE )
                                 file = open(OS_IP_LOG, 'w')
                                 file.write(ip_list[count])
                                 file.close()
+                                #delete  ip check list log
+                                os.remove(OS_IP_TEST_LIST)                                
                                 return SUCCESSFUL
                            else:
                                 DEBUG( ip_list[count] + ' is down!')
@@ -178,7 +187,8 @@ def ip_search( current_check_ip ):
                print('Set Target IP : ' + ip_list[0])
                ip_search_done = 1
                ip_range = end_ip_range
-               return ip_list[0], ip_range, ip_search_done
+               sts =SUCCESSFUL
+               return sts, ip_list[0], ip_range, ip_search_done
           else:
                DEBUG( 'Previous IP ' + ip_list[0] + ' is down! Search New Target IP Again...')
                #delete previous ip log
@@ -196,12 +206,13 @@ def ip_search( current_check_ip ):
           if rsp == 0:
                print ip_addr, ' is up!'
                print('Set Target IP : ' + ip_addr)
-               return ip_addr, ip_range , ip_search_done
+               return sts, ip_addr, ip_range , ip_search_done
           else:
                DEBUG( ip_addr + ' is down!')
 
      print('IP Search Finish')
-     return ip_addr, ip_range , ip_search_done     
+     sts = SUCCESSFUL
+     return sts, ip_addr, ip_range , ip_search_done     
 
 
      

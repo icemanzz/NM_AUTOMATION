@@ -130,7 +130,7 @@ background_run_enable  = 1
 os_user      = 'root'
 # define max target ip range
 start_ip_range = 20
-end_ip_range = 30
+end_ip_range = 35
 head_ip_add  = '192.168.0.'
 # define ping parameter for win and linux
 WIN_PING_PARAMETER = ' -n 1 -w 10 '
