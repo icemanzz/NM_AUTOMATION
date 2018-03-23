@@ -62,7 +62,7 @@ def ssh_send_cmd_switch( background_run,  PROGRAM_PATH , STRESS_CMD , LOG_SAVE )
                sts, OS_IP, ip_range, ip_search_done = ip_search(current_os_ip)
                current_os_ip = ip_range
                DEBUG('After ip_search , current_os_ip = %d' %current_os_ip )
-               if(sts == SUCCESSFUL and fetch_ip == 0 ):
+               if(sts == SUCCESSFUL and fetch_ip == 0 and ip_search_done == 0):
                     DEBUG('fetch_ip = %d' %fetch_ip)
                     print('ERROR CAN NOT Find Any IP Available In Target System....')
                     return ERROR 
