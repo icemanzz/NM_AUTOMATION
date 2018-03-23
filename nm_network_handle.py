@@ -70,7 +70,7 @@ def ssh_send_cmd_switch( background_run,  PROGRAM_PATH , STRESS_CMD , LOG_SAVE )
                     DEBUG('Got CentOS IP from LOG file ' )
                     current_os_ip = end_ip_range + 1 # break for  loop
                print('Get Target system IP :' + OS_IP)
-               if(ip_search_done == 0):
+               if(sts == SEARCH and ip_search_done == 0):
                     ##Save Discoveried DHCP IP
                     fetch_ip += 1
                     file = open(OS_IP_TEST_LIST, 'a')
@@ -206,7 +206,7 @@ def ip_search( current_check_ip ):
           if rsp == 0:
                print ip_addr, ' is up!'
                print('Set Target IP : ' + ip_addr)
-               sts = SUCCESSFUL
+               sts = SEARCH
                return sts, ip_addr, ip_range , ip_search_done
           else:
                DEBUG( ip_addr + ' is down!')

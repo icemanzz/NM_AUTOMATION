@@ -120,6 +120,7 @@ NONE        = 'NONE'
 # RESP define
 SUCCESSFUL   = '0'
 ERROR        = 'ERROR'
+SEARCH       = 'SEARCH'
 # Debug OS Type define = 'win' or 'linux'
 os_linux = 'linux'
 os_win   = 'win'
