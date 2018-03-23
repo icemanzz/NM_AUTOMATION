@@ -161,8 +161,7 @@ class Aardvark(object):
         header.rs_sa = target.ipmb_address
         header.rq_seq = self.next_sequence_number
         header.rq_lun = 0
-        #header.rq_sa = self.slave_address
-        header.rq_sa = 0x22
+        header.rq_sa = self.slave_address
         header.cmd_id = cmdid
 
         retries = 100
@@ -178,7 +177,7 @@ class Aardvark(object):
             retries += 1
 
         else:
-            print('Howard Debug Point!!!')
+
             raise TimeoutError()
 
         return rx_data.tostring()[5:-1]

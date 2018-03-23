@@ -206,6 +206,7 @@ def ip_search( current_check_ip ):
           if rsp == 0:
                print ip_addr, ' is up!'
                print('Set Target IP : ' + ip_addr)
+               sts = SUCCESSFUL
                return sts, ip_addr, ip_range , ip_search_done
           else:
                DEBUG( ip_addr + ' is down!')
