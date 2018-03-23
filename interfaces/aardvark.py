@@ -165,7 +165,7 @@ class Aardvark(object):
         header.rq_sa = 0x22
         header.cmd_id = cmdid
 
-        retries = 10
+        retries = 100
         while retries < self.max_retries:
             try:
                 self._send_raw(header, payload)
@@ -178,6 +178,7 @@ class Aardvark(object):
             retries += 1
 
         else:
+            print('Howard Debug Point!!!')
             raise TimeoutError()
 
         return rx_data.tostring()[5:-1]
