@@ -91,6 +91,8 @@ def check_os_available(ipmi):
      #TEST_CMD  = 'ls /home/howard/follow_me_project/get_position.py'
      TEST_CMD = 'ls ' + PTUGEN_PATH
      OS_STS = 0
+     # Delete previous nm_ssh_log 
+     os.remove(SSH_LOG_PATH_LINUX)
      # Check PTU floder data is ready
      ssh_send_cmd_switch(background_run_disable,  SSH_CMD_PATH_EMPTY , TEST_CMD, LOG_SAVE_EN )
      # Check Test List file :
