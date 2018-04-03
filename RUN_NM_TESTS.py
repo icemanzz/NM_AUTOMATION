@@ -1463,7 +1463,7 @@ def NM_004_WIN(ipmi):
      # Run load on host system with PTU 100% loading for 30secs
      ssh_send_cmd_switch(background_run_enable,  PTUGEN_PATH , PTUGEN_P100_30SECS, LOG_SAVE_OFF )
      time.sleep(30)     
-     # Read CPU Power via 0xC8h cmd
+     # Read Memory Power via 0xC8h cmd
      power_memory_average_stress = read_power_py(ipmi , global_power_mode, memory_domain,AC_power_side, 0 )
      if(power_memory_average_stress == ERROR):
          print(NM_004_WIN.__name__ + ':Memory power reading error!!!')
